@@ -13,13 +13,13 @@
         h2 { color: var(--primary); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; }
         .form-group { margin-bottom: 15px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(29, 113, 58, 0.2); }
         input[readonly] { background-color: #f9f9f9; color: #555; }
         #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; transition: 0.3s; }
-        #btnSubmit:hover { opacity: 0.9; }
-        /* CSS ép hiện thanh cuộn */
-        .ss-content .ss-list { max-height: 200px !important; overflow-y: auto !important; }
+        #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
         .back-home { display:block; text-align:center; margin-top:15px; color:var(--primary); text-decoration:none; font-weight: 500; }
+        .ss-content .ss-list { max-height: 200px !important; overflow-y: auto !important; }
     </style>
 </head>
 <body>
@@ -57,24 +57,12 @@
         ss1 = new SlimSelect({
             select: '#pbc1',
             settings: { placeholderText: 'Tìm Kênh/Khối...', showSearch: true },
-            events: { 
-                afterChange: (v) => { 
-                    if(v[0].value) {
-                        loadPBC2(v[0].value);
-                    }
-                } 
-            }
+            events: { afterChange: (v) => { if(v[0].value) loadPBC2(v[0].value); } }
         });
         ss2 = new SlimSelect({
             select: '#pbc2',
-            settings: { placeholderText: 'Tìm Phòng ban...', showSearch: true },
-            events: { 
-                afterChange: (v) => { 
-                    if(v[0].value) {
-                        loadDinhHuong(v[0].value);
-                    }
-                } 
-            }
+            settings: { placeholderText: 'Tìm Khu vực/PB/Quản lý tương ứng...', showSearch: true },
+            events: { afterChange: (v) => { if(v[0].value) loadDinhHuong(v[0].value); } }
         });
         fetchData('getPBC1');
     });
@@ -85,23 +73,22 @@
             const data = await res.json();
             
             if(action === 'getPBC1') {
-                const options = [{text: '-- Chọn Kênh/Khối --', value: ''}, ...data.map(i => ({text: i, value: i}))];
-                ss1.setData(options);
+                ss1.setData([{text: '-- Chọn Kênh/Khối --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
             } 
             else if(action === 'getPBC2') {
-                const options = [{text: '-- Chọn Phòng ban --', value: ''}, ...data.map(i => ({text: i, value: i}))];
-                ss2.setData(options);
+                ss2.setData([{text: '-- Chọn Phòng ban --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
             } 
             else if(action === 'getDinhHuong') {
                 document.getElementById('dinhHuong').value = data;
             }
         } catch (error) {
-            console.error("Lỗi tải dữ liệu:", error);
+            console.error("Lỗi:", error);
         }
     }
 
     function loadPBC2(v) { 
         document.getElementById('dinhHuong').value = ""; 
+        ss2.setData([{text: 'Đang tải...', value: ''}]);
         fetchData('getPBC2', `&pbc1=${encodeURIComponent(v)}`); 
     }
 
@@ -120,24 +107,24 @@
         };
 
         if(!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) {
-            return alert("Vui lòng chọn mục 1, 2 và điền mục 4!");
+            return alert("Vui lòng điền đủ mục 1, 2 và 4!");
         }
 
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
         btn.innerText = "ĐANG GỬI...";
 
-        fetch(API_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(payload) 
-        })
+        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
         .then(() => { 
-            alert("Gửi đăng ký thành công!"); 
-            location.reload(); 
+            // Sau khi bấm OK ở alert, sẽ chuyển về trang chủ Hub
+            if(confirm("Gửi đăng ký thành công! Nhấn OK để quay về trang chủ.")) {
+                window.location.href = "../index.html"; 
+            } else {
+                window.location.href = "../index.html"; 
+            }
         })
         .catch(err => {
-            alert("Có lỗi xảy ra, vui lòng thử lại.");
+            alert("Lỗi mạng, hãy thử lại.");
             btn.disabled = false;
             btn.innerText = "GỬI ĐĂNG KÝ";
         });
