@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn & Share - Học viện Aristino</title>
+    <title>Đăng ký Learn & Share</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
     <style>
         :root { --primary: #1D713A; --accent: #FB8C00; }
-        body { font-family: sans-serif; background: var(--primary); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        h2 { color: var(--primary); text-align: center; margin-top: 0; }
+        body { font-family: 'Segoe UI', Arial; background: var(--primary); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; font-size: 1.5rem; }
         .form-group { margin-bottom: 15px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        /* Ép hiển thị thanh cuộn và Search */
-        .ss-content { max-height: 300px !important; }
-        .ss-list { max-height: 200px !important; overflow-y: auto !important; }
+        /* CSS ép hiện thanh cuộn */
+        .ss-content .ss-list { max-height: 200px !important; overflow-y: auto !important; }
     </style>
 </head>
 <body>
@@ -33,17 +32,18 @@
     </div>
     <div class="form-group">
         <label>3. Định hướng:</label>
-        <input type="text" id="dinhHuong" readonly>
+        <input type="text" id="dinhHuong" readonly placeholder="Tự động hiển thị...">
     </div>
     <div class="form-group">
         <label>4. Nội dung chi tiết:</label>
-        <textarea id="noiDung" rows="3"></textarea>
+        <textarea id="noiDung" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ gì?"></textarea>
     </div>
     <div class="form-group">
         <label>5. Hỗ trợ:</label>
-        <textarea id="hoTro" rows="2"></textarea>
+        <textarea id="hoTro" rows="2" placeholder="Cần hỗ trợ điều gì?"></textarea>
     </div>
     <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
+    <a href="../" style="display:block; text-align:center; margin-top:15px; color:var(--primary); text-decoration:none;">⬅ Quay lại trang chủ</a>
 </div>
 
 <script>
@@ -65,21 +65,18 @@
     });
 
     async function fetchData(action, params = '') {
-        try {
-            const response = await fetch(`${API_URL}?action=${action}${params}&v=${Date.now()}`);
-            const data = await response.json();
-            const options = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
-            if(action === 'getPBC1') ss1.setData(options);
-            else if(action === 'getPBC2') ss2.setData(options);
-            else if(action === 'getDinhHuong') document.getElementById('dinhHuong').value = data;
-        } catch(e) { console.error("Lỗi dữ liệu:", e); }
+        const res = await fetch(`${API_URL}?action=${action}${params}&v=${Date.now()}`);
+        const data = await res.json();
+        const options = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+        if(action === 'getPBC1') ss1.setData(options);
+        else if(action === 'getPBC2') ss2.setData(options);
+        else if(action === 'getDinhHuong') document.getElementById('dinhHuong').value = data;
     }
 
     function loadPBC2(v) { document.getElementById('dinhHuong').value = ""; fetchData('getPBC2', `&pbc1=${encodeURIComponent(v)}`); }
     function loadDH(v) { fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(v)}`); }
 
     function submitData() {
-        const btn = document.getElementById('btnSubmit');
         const payload = {
             pbc1: document.getElementById('pbc1').value,
             pbc2: document.getElementById('pbc2').value,
@@ -87,10 +84,10 @@
             noiDungChiTiet: document.getElementById('noiDung').value,
             hoTro: document.getElementById('hoTro').value
         };
-        if(!payload.pbc1 || !payload.pbc2) return alert("Vui lòng chọn mục 1 và 2!");
-        btn.disabled = true; btn.innerText = "ĐANG GỬI...";
+        if(!payload.pbc1 || !payload.pbc2) return alert("Chọn đủ mục 1 và 2!");
+        document.getElementById('btnSubmit').innerText = "ĐANG GỬI...";
         fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-        .then(() => { alert("Đăng ký thành công!"); location.reload(); });
+        .then(() => { alert("Thành công!"); location.reload(); });
     }
 </script>
 </body>
