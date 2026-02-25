@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Đăng ký Learn & Share - Học viện Aristino</title>
+    <title>Đăng ký Learn & Share - Aristino</title>
     
     <script src="https://unpkg.com/slim-select@latest/dist/slimselect.min.js"></script>
     <link href="https://unpkg.com/slim-select@latest/dist/slimselect.css" rel="stylesheet">
@@ -18,46 +18,38 @@
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         input[readonly] { background-color: #f0f0f0; color: #555; }
         #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-top: 10px; transition: 0.3s; }
-        #btnSubmit:disabled { background: #ccc; }
-        .back-home { display: block; text-align: center; margin-top: 15px; color: var(--primary); text-decoration: none; font-size: 0.9rem; }
         
-        /* Tùy chỉnh thanh cuộn và chiều cao list của SlimSelect */
-        .ss-content .ss-list { max-height: 250px !important; } 
-        .ss-main { padding: 4px !important; border-radius: 6px !important; border: 1px solid #ddd !important; }
+        /* FIX: Ép SlimSelect hiện thanh cuộn và ô Search */
+        .ss-main { padding: 5px !important; border-radius: 6px !important; border: 1px solid #ddd !important; background: #fff !important; }
+        .ss-content .ss-list { max-height: 200px !important; overflow-y: auto !important; }
+        .ss-search input { font-size: 16px !important; padding: 10px !important; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>ĐĂNG KÝ LEARN & SHARE</h2>
-    
     <div class="form-group">
         <label>1. Chọn Kênh/Khối (PBC1):</label>
         <select id="pbc1"></select>
     </div>
-    
     <div class="form-group">
-        <label>2. Chọn Khu vực/Phòng Ban/Quản lý (PBC2):</label>
+        <label>2. Chọn Khu vực/Phòng Ban (PBC2):</label>
         <select id="pbc2"></select>
     </div>
-    
     <div class="form-group">
         <label>3. Định hướng:</label>
         <input type="text" id="dinhHuong" readonly placeholder="Tự động hiển thị...">
     </div>
-    
     <div class="form-group">
         <label>4. Nội dung chi tiết:</label>
         <textarea id="noiDungChiTiet" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ nội dung gì?"></textarea>
     </div>
-    
     <div class="form-group">
         <label>5. Hỗ trợ:</label>
-        <textarea id="hoTro" rows="2" placeholder="Cần học viện hay K&G hỗ trợ gì?"></textarea>
+        <textarea id="hoTro" rows="2" placeholder="Cần học viên hay L&D hỗ trợ gì?"></textarea>
     </div>
-    
     <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
-    <a href="../" class="back-home">⬅ Quay lại trang chủ</a>
-    <p id="status" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
+    <a href="../" style="display:block; text-align:center; margin-top:15px; color:var(--primary); text-decoration:none; font-size:0.9rem;">⬅ Quay lại trang chủ</a>
 </div>
 
 <script>
@@ -65,60 +57,30 @@
     let ss1, ss2;
 
     window.onload = function() {
-        // Cấu hình SlimSelect có tính năng tìm kiếm (Search)
+        // Khởi tạo SlimSelect với Search ENABLED
         ss1 = new SlimSelect({
             select: '#pbc1',
-            settings: { 
-                placeholderText: '-- Đang tải danh sách... --',
-                showSearch: true, // Hiện ô tìm kiếm
-                searchText: 'Không tìm thấy kết quả',
-                searchPlaceholder: 'Tìm Kênh/Khối...'
-            },
-            events: {
-                afterChange: (newVal) => {
-                    const val = newVal[0].value;
-                    if (val) loadPBC2(val);
-                }
-            }
+            settings: { placeholderText: 'Đang tải...', showSearch: true, searchPlaceholder: 'Gõ để tìm nhanh...' },
+            events: { afterChange: (newVal) => { if (newVal[0].value) loadPBC2(newVal[0].value); } }
         });
 
         ss2 = new SlimSelect({
             select: '#pbc2',
-            settings: { 
-                placeholderText: '-- Chọn PBC1 trước --',
-                showSearch: true,
-                searchText: 'Không tìm thấy kết quả',
-                searchPlaceholder: 'Tìm Phòng ban...'
-            },
-            events: {
-                afterChange: (newVal) => {
-                    const val = newVal[0].value;
-                    if (val) loadDinhHuong(val);
-                }
-            }
+            settings: { placeholderText: '-- Chọn PBC1 trước --', showSearch: true, searchPlaceholder: 'Tìm đơn vị...' },
+            events: { afterChange: (newVal) => { if (newVal[0].value) loadDinhHuong(newVal[0].value); } }
         });
 
         fetchData('getPBC1');
     };
 
     function fetchData(action, params = '') {
-        const url = `${API_URL}?action=${action}${params}&t=${new Date().getTime()}`;
-        
-        fetch(url)
+        fetch(`${API_URL}?action=${action}${params}&cache=${new Date().getTime()}`)
             .then(res => res.json())
             .then(data => {
                 const options = [{text: '-- Chọn --', value: '', placeholder: true}, ...data.map(i => ({text: i, value: i}))];
-                if (action === 'getPBC1') {
-                    ss1.setData(options);
-                } else if (action === 'getPBC2') {
-                    ss2.setData(options);
-                } else if (action === 'getDinhHuong') {
-                    document.getElementById('dinhHuong').value = data;
-                }
-            })
-            .catch(err => {
-                console.error("Lỗi kết nối:", err);
-                document.getElementById('status').innerHTML = '<span style="color:red">Lỗi tải dữ liệu.</span>';
+                if (action === 'getPBC1') ss1.setData(options);
+                else if (action === 'getPBC2') ss2.setData(options);
+                else if (action === 'getDinhHuong') document.getElementById('dinhHuong').value = data;
             });
     }
 
@@ -141,29 +103,11 @@
             noiDungChiTiet: document.getElementById('noiDungChiTiet').value,
             hoTro: document.getElementById('hoTro').value
         };
-
-        if (!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) {
-            alert("Vui lòng điền đủ mục 1, 2 và 4!");
-            return;
-        }
-
+        if (!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) { alert("Thiếu thông tin!"); return; }
         const btn = document.getElementById('btnSubmit');
-        btn.disabled = true;
-        btn.innerText = "ĐANG GỬI...";
-
-        fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            alert("Đã gửi đăng ký thành công!");
-            location.reload(); // Tải lại trang sau khi gửi thành công
-        })
-        .catch(err => {
-            alert("Lỗi. Thử lại!");
-            btn.disabled = false;
-        });
+        btn.disabled = true; btn.innerText = "ĐANG GỬI...";
+        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+        .then(() => { alert("Thành công!"); location.reload(); });
     }
 </script>
 </body>
