@@ -10,13 +10,16 @@
         :root { --primary: #1D713A; --accent: #FB8C00; }
         body { font-family: 'Segoe UI', Arial; background: var(--primary); margin: 0; padding: 15px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; font-size: 1.5rem; }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; }
         .form-group { margin-bottom: 15px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; }
         input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        input[readonly] { background-color: #f9f9f9; color: #555; }
+        #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; transition: 0.3s; }
+        #btnSubmit:hover { opacity: 0.9; }
         /* CSS ép hiện thanh cuộn */
         .ss-content .ss-list { max-height: 200px !important; overflow-y: auto !important; }
+        .back-home { display:block; text-align:center; margin-top:15px; color:var(--primary); text-decoration:none; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -31,50 +34,81 @@
         <select id="pbc2"></select>
     </div>
     <div class="form-group">
-        <label>3. Định hướng:</label>
+        <label>3. Nội dung định hướng (Dựa trên TNA):</label>
         <input type="text" id="dinhHuong" readonly placeholder="Tự động hiển thị...">
     </div>
     <div class="form-group">
-        <label>4. Nội dung chi tiết:</label>
+        <label>4. Nội dung chia sẻ đơn vị đăng ký tháng này:</label>
         <textarea id="noiDung" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ gì?"></textarea>
     </div>
     <div class="form-group">
-        <label>5. Hỗ trợ:</label>
-        <textarea id="hoTro" rows="2" placeholder="Cần hỗ trợ điều gì?"></textarea>
+        <label>5. Để hiệu quả, bạn cần Học viện hỗ trợ gì?:</label>
+        <textarea id="hoTro" rows="2" placeholder="Công cụ, địa điểm, tài liệu..."></textarea>
     </div>
     <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
-    <a href="../" style="display:block; text-align:center; margin-top:15px; color:var(--primary); text-decoration:none;">⬅ Quay lại trang chủ</a>
+    <a href="../" class="back-home">⬅ Quay lại trang chủ</a>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbypABUB59iLKStyi6XBqIlTyMTJl4NrQE-AO0fJRxuJCMFq_LVPQhdph818iyDTG090/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycby1hizRPgFyeYU9kLAkjlitxmunhIapb8d81kNNR0oNfke3rCkZPO-SjvcRINUO2q7u/exec";
     let ss1, ss2;
 
     document.addEventListener('DOMContentLoaded', () => {
         ss1 = new SlimSelect({
             select: '#pbc1',
             settings: { placeholderText: 'Tìm Kênh/Khối...', showSearch: true },
-            events: { afterChange: (v) => { if(v[0].value) loadPBC2(v[0].value); } }
+            events: { 
+                afterChange: (v) => { 
+                    if(v[0].value) {
+                        loadPBC2(v[0].value);
+                    }
+                } 
+            }
         });
         ss2 = new SlimSelect({
             select: '#pbc2',
             settings: { placeholderText: 'Tìm Phòng ban...', showSearch: true },
-            events: { afterChange: (v) => { if(v[0].value) loadDH(v[0].value); } }
+            events: { 
+                afterChange: (v) => { 
+                    if(v[0].value) {
+                        loadDinhHuong(v[0].value);
+                    }
+                } 
+            }
         });
         fetchData('getPBC1');
     });
 
     async function fetchData(action, params = '') {
-        const res = await fetch(`${API_URL}?action=${action}${params}&v=${Date.now()}`);
-        const data = await res.json();
-        const options = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
-        if(action === 'getPBC1') ss1.setData(options);
-        else if(action === 'getPBC2') ss2.setData(options);
-        else if(action === 'getDinhHuong') document.getElementById('dinhHuong').value = data;
+        try {
+            const res = await fetch(`${API_URL}?action=${action}${params}&v=${Date.now()}`);
+            const data = await res.json();
+            
+            if(action === 'getPBC1') {
+                const options = [{text: '-- Chọn Kênh/Khối --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+                ss1.setData(options);
+            } 
+            else if(action === 'getPBC2') {
+                const options = [{text: '-- Chọn Phòng ban --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+                ss2.setData(options);
+            } 
+            else if(action === 'getDinhHuong') {
+                document.getElementById('dinhHuong').value = data;
+            }
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu:", error);
+        }
     }
 
-    function loadPBC2(v) { document.getElementById('dinhHuong').value = ""; fetchData('getPBC2', `&pbc1=${encodeURIComponent(v)}`); }
-    function loadDH(v) { fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(v)}`); }
+    function loadPBC2(v) { 
+        document.getElementById('dinhHuong').value = ""; 
+        fetchData('getPBC2', `&pbc1=${encodeURIComponent(v)}`); 
+    }
+
+    function loadDinhHuong(v) { 
+        document.getElementById('dinhHuong').value = "Đang lấy dữ liệu...";
+        fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(v)}`); 
+    }
 
     function submitData() {
         const payload = {
@@ -84,10 +118,29 @@
             noiDungChiTiet: document.getElementById('noiDung').value,
             hoTro: document.getElementById('hoTro').value
         };
-        if(!payload.pbc1 || !payload.pbc2) return alert("Chọn đủ mục 1 và 2!");
-        document.getElementById('btnSubmit').innerText = "ĐANG GỬI...";
-        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-        .then(() => { alert("Thành công!"); location.reload(); });
+
+        if(!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) {
+            return alert("Vui lòng chọn mục 1, 2 và điền mục 4!");
+        }
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerText = "ĐANG GỬI...";
+
+        fetch(API_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(payload) 
+        })
+        .then(() => { 
+            alert("Gửi đăng ký thành công!"); 
+            location.reload(); 
+        })
+        .catch(err => {
+            alert("Có lỗi xảy ra, vui lòng thử lại.");
+            btn.disabled = false;
+            btn.innerText = "GỬI ĐĂNG KÝ";
+        });
     }
 </script>
 </body>
