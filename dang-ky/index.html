@@ -1,77 +1,178 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Link Đăng ký Learn & Share</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đăng ký Learn & Share - Aristino</title>
+    
     <script src="https://unpkg.com/slim-select@latest/dist/slimselect.min.js"></script>
     <link href="https://unpkg.com/slim-select@latest/dist/slimselect.css" rel="stylesheet">
+    
     <style>
-        body { font-family: Arial; background: #1D713A; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        :root { --primary: #1D713A; --accent: #FB8C00; }
+        
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: var(--primary); 
+            margin: 0; 
+            padding: 10px; /* Giảm padding trên mobile */
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 500px; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        h2 { 
+            color: var(--primary); 
+            text-align: center; 
+            font-size: 1.4rem; 
+            margin-top: 0;
+            text-transform: uppercase;
+        }
+
         .form-group { margin-bottom: 15px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; }
-        input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; }
-        #btnSubmit { width: 100%; padding: 10px; background: #FB8C00; color: white; border: none; cursor: pointer; }
+        
+        label { 
+            font-weight: bold; 
+            display: block; 
+            margin-bottom: 5px; 
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        /* Tối ưu ô nhập liệu cho Mobile */
+        input, textarea, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 16px; /* Font 16px để iOS không tự động zoom vào ô nhập */
+        }
+
+        input[readonly] { background-color: #f0f0f0; color: #555; }
+
+        #btnSubmit { 
+            width: 100%; 
+            padding: 15px; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            border-radius: 6px;
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 1rem;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        #btnSubmit:active { transform: scale(0.98); }
+        #btnSubmit:disabled { background: #ccc; }
+
+        .back-home {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        /* SlimSelect Mobile Fix */
+        .ss-main { padding: 4px !important; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>ĐĂNG KÝ LEARN & SHARE</h2>
+    
     <div class="form-group">
         <label>1. Chọn PBC1:</label>
         <select id="pbc1"></select>
     </div>
+    
     <div class="form-group">
         <label>2. Chọn PBC2:</label>
         <select id="pbc2"></select>
     </div>
+    
     <div class="form-group">
         <label>3. Định hướng:</label>
-        <input type="text" id="dinhHuong" readonly>
+        <input type="text" id="dinhHuong" readonly placeholder="Tự động hiển thị...">
     </div>
+    
     <div class="form-group">
         <label>4. Nội dung chi tiết:</label>
-        <textarea id="noiDungChiTiet"></textarea>
+        <textarea id="noiDungChiTiet" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ nội dung gì?"></textarea>
     </div>
+    
     <div class="form-group">
         <label>5. Hỗ trợ:</label>
-        <textarea id="hoTro"></textarea>
+        <textarea id="hoTro" rows="2" placeholder="Cần học viên hay L&D hỗ trợ gì?"></textarea>
     </div>
+    
     <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
-    <p id="status"></p>
+    <a href="../" class="back-home">⬅ Quay lại trang chủ</a>
+    <p id="status" style="text-align: center; font-weight: bold;"></p>
 </div>
 
 <script>
-    const API_URL = "THAY_THE_LINK_WEB_APP_URL_CUA_BAN_TAI_DAY";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwGrLpSoi2ntZzw3RFK-p9TWUnHNGkU2D5aPQjwqsDYijx1sL-9lictZ3l3nmSqHWzg/exec";
     let ss1, ss2;
 
     window.onload = function() {
-        ss1 = new SlimSelect({ select: '#pbc1', events: { afterChange: (v) => loadPBC2(v[0].value) } });
-        ss2 = new SlimSelect({ select: '#pbc2', events: { afterChange: (v) => loadDinhHuong(v[0].value) } });
+        // Khởi tạo SlimSelect
+        ss1 = new SlimSelect({ 
+            select: '#pbc1',
+            settings: { placeholderText: '-- Chọn PBC1 --' },
+            events: { afterChange: (v) => { if(v[0].value) loadPBC2(v[0].value); } } 
+        });
+        
+        ss2 = new SlimSelect({ 
+            select: '#pbc2',
+            settings: { placeholderText: '-- Chọn PBC2 --' },
+            events: { afterChange: (v) => { if(v[0].value) loadDinhHuong(v[0].value); } } 
+        });
 
-        fetch(`${API_URL}?action=getPBC1`)
-            .then(res => res.json())
-            .then(data => {
-                ss1.setData([{text: '-- Chọn PBC1 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
-            });
+        // Load PBC1 ban đầu
+        fetchData('getPBC1');
     };
 
-    function loadPBC2(pbc1) {
-        if (!pbc1) return;
-        fetch(`${API_URL}?action=getPBC2&pbc1=${encodeURIComponent(pbc1)}`)
+    function fetchData(action, params = '') {
+        const url = `${API_URL}?action=${action}${params}`;
+        fetch(url)
             .then(res => res.json())
             .then(data => {
-                ss2.setData([{text: '-- Chọn PBC2 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
+                if (action === 'getPBC1') {
+                    ss1.setData([{text: '-- Chọn PBC1 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
+                } else if (action === 'getPBC2') {
+                    ss2.setData([{text: '-- Chọn PBC2 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
+                } else if (action === 'getDinhHuong') {
+                    document.getElementById('dinhHuong').value = data;
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi kết nối API:", err);
+                document.getElementById('status').innerHTML = '<span style="color:red">Lỗi tải dữ liệu. Hãy kiểm tra kết nối!</span>';
             });
     }
 
+    function loadPBC2(pbc1) {
+        document.getElementById('dinhHuong').value = "";
+        fetchData('getPBC2', `&pbc1=${encodeURIComponent(pbc1)}`);
+    }
+
     function loadDinhHuong(pbc2) {
-        if (!pbc2) return;
-        fetch(`${API_URL}?action=getDinhHuong&pbc2=${encodeURIComponent(pbc2)}`)
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('dinhHuong').value = data;
-            });
+        fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(pbc2)}`);
     }
 
     function submitData() {
@@ -83,17 +184,31 @@
             hoTro: document.getElementById('hoTro').value
         };
 
+        if (!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) {
+            alert("Vui lòng điền đủ các mục bắt buộc (1, 2 và 4)");
+            return;
+        }
+
         const btn = document.getElementById('btnSubmit');
+        const status = document.getElementById('status');
         btn.disabled = true;
         btn.innerText = "ĐANG GỬI...";
 
+        // Sử dụng phương thức POST
         fetch(API_URL, {
             method: 'POST',
+            mode: 'no-cors', // Cần thiết khi gọi Google Script từ domain khác
             body: JSON.stringify(payload)
         })
-        .then(res => res.text())
-        .then(res => {
-            alert("Kết quả: " + res);
+        .then(() => {
+            alert("Đã gửi đăng ký thành công!");
+            btn.disabled = false;
+            btn.innerText = "GỬI ĐĂNG KÝ";
+            document.getElementById('noiDungChiTiet').value = "";
+            document.getElementById('hoTro').value = "";
+        })
+        .catch(err => {
+            alert("Có lỗi xảy ra khi gửi. Vui lòng thử lại!");
             btn.disabled = false;
             btn.innerText = "GỬI ĐĂNG KÝ";
         });
