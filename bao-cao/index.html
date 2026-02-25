@@ -16,7 +16,6 @@
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
         input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(251, 140, 0, 0.1); }
         
-        /* Progress Bar */
         #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 20px; height: 12px; overflow: hidden; border: 1px solid #ddd; }
         #progressBar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), #ffa726); transition: 0.2s; }
         
@@ -26,7 +25,6 @@
         .back-home { display: block; text-align: center; margin-top: 20px; color: #666; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
         .back-home:hover { color: var(--dark-green); }
 
-        /* Mobile Optimization */
         @media (max-width: 480px) {
             .container { padding: 20px 15px; }
             h2 { font-size: 1.2rem; }
@@ -55,7 +53,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyE5c4Jjir3yR6qkIUsShJf6BMdwCO2d4pJmeQdGBsGk7tORXvsS0QYeX9MZM9OJ0MLUw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx7b3uxy5etJNa_939fbOYe3pkzKuq1SnTzLnSzy5NmMqWt4r51VjXwVTTuVr5SaNuq/exec";
     let ss1, ss2, ss3;
 
     window.onload = () => {
@@ -80,16 +78,19 @@
     function loadNhanSu(v) { ss3.setData([{text: 'Đang tìm nhân sự...', value: ''}]); fetchData('getNhanSu_BC', `&pbc2=${encodeURIComponent(v)}`); }
 
     async function handleUpload() {
-        const file = document.getElementById('fileInput').files[0];
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
         const progress = document.getElementById('progressContainer');
         const bar = document.getElementById('progressBar');
 
         const pbc1 = document.getElementById('pbc1').value;
+        const pbc2 = document.getElementById('pbc2').value;
         const nhanSu = document.getElementById('nhanSu').value;
         const noiDung = document.getElementById('noiDungChinh').value;
+        const ngay = document.getElementById('ngayChiaSe').value;
 
-        if(!pbc1 || !nhanSu || !noiDung || !fileInput) return alert("Vui lòng điền đủ các mục 1, 3, 5 và 6!");
+        if(!pbc1 || !nhanSu || !noiDung || !ngay) return alert("Vui lòng điền đủ các mục 1, 3, 4 và 5!");
 
         btn.disabled = true;
         btn.innerText = "ĐANG KHỞI TẠO...";
@@ -99,14 +100,20 @@
         if (file) {
             progress.style.display = 'block';
             try {
-                // 1. Khởi tạo phiên Upload Resumable
+                // 1. Khởi tạo phiên Upload Resumable (Gửi dưới dạng text để tránh CORS preflight)
                 const initRes = await fetch(API_URL, {
                     method: 'POST',
+                    mode: 'cors',
                     body: JSON.stringify({ action: 'initiateUpload', fileName: file.name, fileType: file.type })
                 });
+                
                 const uploadUrl = await initRes.text();
+                
+                if (uploadUrl.startsWith("Lỗi") || !uploadUrl.startsWith("http")) {
+                    throw new Error(uploadUrl);
+                }
 
-                // 2. Tải file trực tiếp lên Google Drive
+                // 2. Tải file trực tiếp lên Google Drive API
                 const xhr = new XMLHttpRequest();
                 xhr.open("PUT", uploadUrl, true);
                 
@@ -118,15 +125,22 @@
                     }
                 };
 
-                const uploadPromise = new Promise((resolve, reject) => {
-                    xhr.onload = () => resolve(JSON.parse(xhr.responseText));
-                    xhr.onerror = () => reject("Lỗi kết nối khi tải file");
+                const fileId = await new Promise((resolve, reject) => {
+                    xhr.onload = () => {
+                        if (xhr.status === 200 || xhr.status === 201) {
+                            const resp = JSON.parse(xhr.responseText);
+                            resolve(resp.id);
+                        } else {
+                            reject("Lỗi Server: " + xhr.status);
+                        }
+                    };
+                    xhr.onerror = () => reject("Lỗi kết nối mạng");
                     xhr.send(file);
                 });
 
-                const fileInfo = await uploadPromise;
-                fileUrl = `https://drive.google.com/open?id=${fileInfo.id}`;
+                fileUrl = `https://drive.google.com/open?id=${fileId}`;
             } catch (err) {
+                console.error(err);
                 alert("Lỗi tải file: " + err);
                 btn.disabled = false;
                 btn.innerText = "GỬI BÁO CÁO";
@@ -134,27 +148,28 @@
             }
         }
 
-        // 3. Ghi dữ liệu cuối cùng vào Sheet
+        // 3. Ghi dữ liệu vào Sheet
         btn.innerText = "ĐANG LƯU DỮ LIỆU...";
         fetch(API_URL, {
             method: 'POST',
+            mode: 'cors',
             body: JSON.stringify({
                 action: 'submitFinalData',
                 pbc1: pbc1,
-                pbc2: document.getElementById('pbc2').value,
+                pbc2: pbc2,
                 nhanSu: nhanSu,
-                ngayChiaSe: document.getElementById('ngayChiaSe').value,
+                ngayChiaSe: ngay,
                 noiDungChinh: noiDung,
                 fileUrl: fileUrl
             })
         })
-        .then(() => {
+        .then(async (res) => {
             alert("Báo cáo thành công!");
             window.location.href = "../index.html";
         })
         .catch(err => {
-            alert("File đính kèm của bạn đã được lưu trữ thành công vào kho Học viện. Tuy nhiên, hệ thống ghi nhận Dashboard Báo cáo đang bận. Bạn không cần upload lại, hãy báo cho Học viện để xác nhận nhé!");
-            btn.disabled = false;
+            alert("Video/Tài liệu đã tải lên thành công, nhưng ghi nhận sổ cái gặp lỗi nhẹ. Đừng lo, Học viện đã nhận được file của bạn!");
+            window.location.href = "../index.html";
         });
     }
 </script>
