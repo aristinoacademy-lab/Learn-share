@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Link Đăng ký Learn & Share</title>
+    <script src="https://unpkg.com/slim-select@latest/dist/slimselect.min.js"></script>
+    <link href="https://unpkg.com/slim-select@latest/dist/slimselect.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial; background: #1D713A; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; }
+        #btnSubmit { width: 100%; padding: 10px; background: #FB8C00; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>ĐĂNG KÝ LEARN & SHARE</h2>
+    <div class="form-group">
+        <label>1. Chọn PBC1:</label>
+        <select id="pbc1"></select>
+    </div>
+    <div class="form-group">
+        <label>2. Chọn PBC2:</label>
+        <select id="pbc2"></select>
+    </div>
+    <div class="form-group">
+        <label>3. Định hướng:</label>
+        <input type="text" id="dinhHuong" readonly>
+    </div>
+    <div class="form-group">
+        <label>4. Nội dung chi tiết:</label>
+        <textarea id="noiDungChiTiet"></textarea>
+    </div>
+    <div class="form-group">
+        <label>5. Hỗ trợ:</label>
+        <textarea id="hoTro"></textarea>
+    </div>
+    <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
+    <p id="status"></p>
+</div>
+
+<script>
+    const API_URL = "THAY_THE_LINK_WEB_APP_URL_CUA_BAN_TAI_DAY";
+    let ss1, ss2;
+
+    window.onload = function() {
+        ss1 = new SlimSelect({ select: '#pbc1', events: { afterChange: (v) => loadPBC2(v[0].value) } });
+        ss2 = new SlimSelect({ select: '#pbc2', events: { afterChange: (v) => loadDinhHuong(v[0].value) } });
+
+        fetch(`${API_URL}?action=getPBC1`)
+            .then(res => res.json())
+            .then(data => {
+                ss1.setData([{text: '-- Chọn PBC1 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
+            });
+    };
+
+    function loadPBC2(pbc1) {
+        if (!pbc1) return;
+        fetch(`${API_URL}?action=getPBC2&pbc1=${encodeURIComponent(pbc1)}`)
+            .then(res => res.json())
+            .then(data => {
+                ss2.setData([{text: '-- Chọn PBC2 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
+            });
+    }
+
+    function loadDinhHuong(pbc2) {
+        if (!pbc2) return;
+        fetch(`${API_URL}?action=getDinhHuong&pbc2=${encodeURIComponent(pbc2)}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('dinhHuong').value = data;
+            });
+    }
+
+    function submitData() {
+        const payload = {
+            pbc1: document.getElementById('pbc1').value,
+            pbc2: document.getElementById('pbc2').value,
+            dinhHuong: document.getElementById('dinhHuong').value,
+            noiDungChiTiet: document.getElementById('noiDungChiTiet').value,
+            hoTro: document.getElementById('hoTro').value
+        };
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerText = "ĐANG GỬI...";
+
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.text())
+        .then(res => {
+            alert("Kết quả: " + res);
+            btn.disabled = false;
+            btn.innerText = "GỬI ĐĂNG KÝ";
+        });
+    }
+</script>
+</body>
+</html>
