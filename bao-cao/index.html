@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Báo cáo Learn & Share | Aristino</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #FB8C00; --dark-green: #1D713A; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; }
+        h2 { color: var(--dark-green); text-align: center; font-size: 1.4rem; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group { margin-bottom: 18px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 0.95rem; color: #333; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(251, 140, 0, 0.1); }
+        
+        /* Progress Bar */
+        #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 20px; height: 12px; overflow: hidden; border: 1px solid #ddd; }
+        #progressBar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), #ffa726); transition: 0.2s; }
+        
+        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 10px; transition: 0.3s; box-shadow: 0 4px 6px rgba(251, 140, 0, 0.2); }
+        #btnSubmit:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+        
+        .back-home { display: block; text-align: center; margin-top: 20px; color: #666; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+        .back-home:hover { color: var(--dark-green); }
+
+        /* Mobile Optimization */
+        @media (max-width: 480px) {
+            .container { padding: 20px 15px; }
+            h2 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>L&S - BÁO CÁO GHI NHẬN CHIA SẺ</h2>
+    
+    <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
+    <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
+    <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
+    <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngayChiaSe"></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDungChinh" rows="3" placeholder="Tóm tắt nội dung phiên chia sẻ..."></textarea></div>
+    <div class="form-group">
+        <label>6. Đính kèm tài liệu (Video, Audio, tài liệu nếu có...):</label>
+        <input type="file" id="fileInput">
+        <small style="color: #888; display: block; margin-top: 5px;">Hỗ trợ file lên tới 2GB</small>
+    </div>
+
+    <div id="progressContainer"><div id="progressBar"></div></div>
+    
+    <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
+    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyE5c4Jjir3yR6qkIUsShJf6BMdwCO2d4pJmeQdGBsGk7tORXvsS0QYeX9MZM9OJ0MLUw/exec";
+    let ss1, ss2, ss3;
+
+    window.onload = () => {
+        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Tìm Kênh/Khối', showSearch: true }, events: { afterChange: v => loadPBC2(v[0].value) } });
+        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Tìm Khu vực/Phòng ban/Quản lý', showSearch: true }, events: { afterChange: v => loadNhanSu(v[0].value) } });
+        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm Nhân sự', showSearch: true } });
+        fetchData('getPBC1_BC');
+    };
+
+    async function fetchData(action, params = '') {
+        try {
+            const res = await fetch(`${API_URL}?action=${action}${params}&v=${Date.now()}`);
+            const data = await res.json();
+            const options = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+            if(action === 'getPBC1_BC') ss1.setData(options);
+            else if(action === 'getPBC2_BC') ss2.setData(options);
+            else if(action === 'getNhanSu_BC') ss3.setData(options);
+        } catch (e) { console.error("Lỗi tải data:", e); }
+    }
+
+    function loadPBC2(v) { ss2.setData([{text: 'Đang tải...', value: ''}]); fetchData('getPBC2_BC', `&pbc1=${encodeURIComponent(v)}`); }
+    function loadNhanSu(v) { ss3.setData([{text: 'Đang tìm nhân sự...', value: ''}]); fetchData('getNhanSu_BC', `&pbc2=${encodeURIComponent(v)}`); }
+
+    async function handleUpload() {
+        const file = document.getElementById('fileInput').files[0];
+        const btn = document.getElementById('btnSubmit');
+        const progress = document.getElementById('progressContainer');
+        const bar = document.getElementById('progressBar');
+
+        const pbc1 = document.getElementById('pbc1').value;
+        const nhanSu = document.getElementById('nhanSu').value;
+        const noiDung = document.getElementById('noiDungChinh').value;
+
+        if(!pbc1 || !nhanSu || !noiDung || !fileInput) return alert("Vui lòng điền đủ các mục 1, 3, 5 và 6!");
+
+        btn.disabled = true;
+        btn.innerText = "ĐANG KHỞI TẠO...";
+
+        let fileUrl = "Không có đính kèm";
+
+        if (file) {
+            progress.style.display = 'block';
+            try {
+                // 1. Khởi tạo phiên Upload Resumable
+                const initRes = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'initiateUpload', fileName: file.name, fileType: file.type })
+                });
+                const uploadUrl = await initRes.text();
+
+                // 2. Tải file trực tiếp lên Google Drive
+                const xhr = new XMLHttpRequest();
+                xhr.open("PUT", uploadUrl, true);
+                
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        bar.style.width = percent + '%';
+                        btn.innerText = `ĐANG TẢI FILE (${percent}%)...`;
+                    }
+                };
+
+                const uploadPromise = new Promise((resolve, reject) => {
+                    xhr.onload = () => resolve(JSON.parse(xhr.responseText));
+                    xhr.onerror = () => reject("Lỗi kết nối khi tải file");
+                    xhr.send(file);
+                });
+
+                const fileInfo = await uploadPromise;
+                fileUrl = `https://drive.google.com/open?id=${fileInfo.id}`;
+            } catch (err) {
+                alert("Lỗi tải file: " + err);
+                btn.disabled = false;
+                btn.innerText = "GỬI BÁO CÁO";
+                return;
+            }
+        }
+
+        // 3. Ghi dữ liệu cuối cùng vào Sheet
+        btn.innerText = "ĐANG LƯU DỮ LIỆU...";
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'submitFinalData',
+                pbc1: pbc1,
+                pbc2: document.getElementById('pbc2').value,
+                nhanSu: nhanSu,
+                ngayChiaSe: document.getElementById('ngayChiaSe').value,
+                noiDungChinh: noiDung,
+                fileUrl: fileUrl
+            })
+        })
+        .then(() => {
+            alert("Báo cáo thành công!");
+            window.location.href = "../index.html";
+        })
+        .catch(err => {
+            alert("File đính kèm của bạn đã được lưu trữ thành công vào kho Học viện. Tuy nhiên, hệ thống ghi nhận Dashboard Báo cáo đang bận. Bạn không cần upload lại, hãy báo cho Học viện để xác nhận nhé!");
+            btn.disabled = false;
+        });
+    }
+</script>
+</body>
+</html>
