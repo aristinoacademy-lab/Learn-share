@@ -10,85 +10,17 @@
     
     <style>
         :root { --primary: #1D713A; --accent: #FB8C00; }
-        
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background: var(--primary); 
-            margin: 0; 
-            padding: 10px; /* Giảm padding trên mobile */
-            display: flex;
-            justify-content: center;
-        }
-
-        .container { 
-            width: 100%; 
-            max-width: 500px; 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            box-sizing: border-box;
-            margin-top: 10px;
-        }
-
-        h2 { 
-            color: var(--primary); 
-            text-align: center; 
-            font-size: 1.4rem; 
-            margin-top: 0;
-            text-transform: uppercase;
-        }
-
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--primary); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); box-sizing: border-box; margin-top: 10px; }
+        h2 { color: var(--primary); text-align: center; font-size: 1.4rem; margin-top: 0; text-transform: uppercase; }
         .form-group { margin-bottom: 15px; }
-        
-        label { 
-            font-weight: bold; 
-            display: block; 
-            margin-bottom: 5px; 
-            font-size: 0.9rem;
-            color: #333;
-        }
-
-        /* Tối ưu ô nhập liệu cho Mobile */
-        input, textarea, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 6px; 
-            box-sizing: border-box; 
-            font-size: 16px; /* Font 16px để iOS không tự động zoom vào ô nhập */
-        }
-
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.9rem; color: #333; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         input[readonly] { background-color: #f0f0f0; color: #555; }
-
-        #btnSubmit { 
-            width: 100%; 
-            padding: 15px; 
-            background: var(--accent); 
-            color: white; 
-            border: none; 
-            border-radius: 6px;
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 1rem;
-            margin-top: 10px;
-            transition: 0.3s;
-        }
-
-        #btnSubmit:active { transform: scale(0.98); }
+        #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-top: 10px; transition: 0.3s; }
         #btnSubmit:disabled { background: #ccc; }
-
-        .back-home {
-            display: block;
-            text-align: center;
-            margin-top: 15px;
-            color: var(--primary);
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        /* SlimSelect Mobile Fix */
-        .ss-main { padding: 4px !important; }
+        .back-home { display: block; text-align: center; margin-top: 15px; color: var(--primary); text-decoration: none; font-size: 0.9rem; }
+        .ss-main { padding: 4px !important; border-radius: 6px !important; }
     </style>
 </head>
 <body>
@@ -122,7 +54,7 @@
     
     <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
     <a href="../" class="back-home">⬅ Quay lại trang chủ</a>
-    <p id="status" style="text-align: center; font-weight: bold;"></p>
+    <p id="status" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
 </div>
 
 <script>
@@ -130,48 +62,63 @@
     let ss1, ss2;
 
     window.onload = function() {
-        // Khởi tạo SlimSelect
-        ss1 = new SlimSelect({ 
+        // Khởi tạo SlimSelect với cấu hình chuẩn
+        ss1 = new SlimSelect({
             select: '#pbc1',
-            settings: { placeholderText: '-- Chọn PBC1 --' },
-            events: { afterChange: (v) => { if(v[0].value) loadPBC2(v[0].value); } } 
-        });
-        
-        ss2 = new SlimSelect({ 
-            select: '#pbc2',
-            settings: { placeholderText: '-- Chọn PBC2 --' },
-            events: { afterChange: (v) => { if(v[0].value) loadDinhHuong(v[0].value); } } 
+            settings: { placeholderText: '-- Đang tải PBC1... --' },
+            events: {
+                afterChange: (newVal) => {
+                    const val = newVal[0].value;
+                    if (val) loadPBC2(val);
+                }
+            }
         });
 
-        // Load PBC1 ban đầu
+        ss2 = new SlimSelect({
+            select: '#pbc2',
+            settings: { placeholderText: '-- Chọn PBC1 trước --' },
+            events: {
+                afterChange: (newVal) => {
+                    const val = newVal[0].value;
+                    if (val) loadDinhHuong(val);
+                }
+            }
+        });
+
         fetchData('getPBC1');
     };
 
     function fetchData(action, params = '') {
-        const url = `${API_URL}?action=${action}${params}`;
+        // Thêm timestamp để tránh cache trình duyệt
+        const url = `${API_URL}?action=${action}${params}&t=${new Date().getTime()}`;
+        
         fetch(url)
             .then(res => res.json())
             .then(data => {
                 if (action === 'getPBC1') {
-                    ss1.setData([{text: '-- Chọn PBC1 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
+                    const options = [{text: '-- Chọn PBC1 --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+                    ss1.setData(options);
                 } else if (action === 'getPBC2') {
-                    ss2.setData([{text: '-- Chọn PBC2 --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
+                    const options = [{text: '-- Chọn PBC2 --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+                    ss2.setData(options);
                 } else if (action === 'getDinhHuong') {
                     document.getElementById('dinhHuong').value = data;
                 }
             })
             .catch(err => {
-                console.error("Lỗi kết nối API:", err);
-                document.getElementById('status').innerHTML = '<span style="color:red">Lỗi tải dữ liệu. Hãy kiểm tra kết nối!</span>';
+                console.error("Lỗi kết nối:", err);
+                document.getElementById('status').innerHTML = '<span style="color:red">Lỗi tải dữ liệu. Thử F5 trang!</span>';
             });
     }
 
     function loadPBC2(pbc1) {
         document.getElementById('dinhHuong').value = "";
+        ss2.setData([{text: 'Đang tải...', value: ''}]);
         fetchData('getPBC2', `&pbc1=${encodeURIComponent(pbc1)}`);
     }
 
     function loadDinhHuong(pbc2) {
+        document.getElementById('dinhHuong').value = "Đang lấy dữ liệu...";
         fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(pbc2)}`);
     }
 
@@ -185,19 +132,17 @@
         };
 
         if (!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) {
-            alert("Vui lòng điền đủ các mục bắt buộc (1, 2 và 4)");
+            alert("Vui lòng điền đủ các mục 1, 2 và 4!");
             return;
         }
 
         const btn = document.getElementById('btnSubmit');
-        const status = document.getElementById('status');
         btn.disabled = true;
         btn.innerText = "ĐANG GỬI...";
 
-        // Sử dụng phương thức POST
         fetch(API_URL, {
             method: 'POST',
-            mode: 'no-cors', // Cần thiết khi gọi Google Script từ domain khác
+            mode: 'no-cors',
             body: JSON.stringify(payload)
         })
         .then(() => {
@@ -208,7 +153,7 @@
             document.getElementById('hoTro').value = "";
         })
         .catch(err => {
-            alert("Có lỗi xảy ra khi gửi. Vui lòng thử lại!");
+            alert("Có lỗi xảy ra. Hãy thử lại!");
             btn.disabled = false;
             btn.innerText = "GỬI ĐĂNG KÝ";
         });
