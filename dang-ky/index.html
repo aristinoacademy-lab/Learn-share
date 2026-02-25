@@ -2,27 +2,22 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Đăng ký Learn & Share - Aristino</title>
-    
-    <script src="https://unpkg.com/slim-select@latest/dist/slimselect.min.js"></script>
-    <link href="https://unpkg.com/slim-select@latest/dist/slimselect.css" rel="stylesheet">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn & Share - Aristino</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
     <style>
         :root { --primary: #1D713A; --accent: #FB8C00; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--primary); margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); box-sizing: border-box; margin-top: 10px; }
-        h2 { color: var(--primary); text-align: center; font-size: 1.4rem; margin-top: 0; text-transform: uppercase; }
+        body { font-family: sans-serif; background: var(--primary); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        h2 { color: var(--primary); text-align: center; margin-top: 0; }
         .form-group { margin-bottom: 15px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.9rem; color: #333; }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        input[readonly] { background-color: #f0f0f0; color: #555; }
-        #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-top: 10px; transition: 0.3s; }
-        
-        /* FIX: Ép SlimSelect hiện thanh cuộn và ô Search */
-        .ss-main { padding: 5px !important; border-radius: 6px !important; border: 1px solid #ddd !important; background: #fff !important; }
-        .ss-content .ss-list { max-height: 200px !important; overflow-y: auto !important; }
-        .ss-search input { font-size: 16px !important; padding: 10px !important; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        /* Ép hiển thị thanh cuộn và Search */
+        .ss-content { max-height: 300px !important; }
+        .ss-list { max-height: 200px !important; overflow-y: auto !important; }
     </style>
 </head>
 <body>
@@ -38,76 +33,64 @@
     </div>
     <div class="form-group">
         <label>3. Định hướng:</label>
-        <input type="text" id="dinhHuong" readonly placeholder="Tự động hiển thị...">
+        <input type="text" id="dinhHuong" readonly>
     </div>
     <div class="form-group">
         <label>4. Nội dung chi tiết:</label>
-        <textarea id="noiDungChiTiet" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ nội dung gì?"></textarea>
+        <textarea id="noiDung" rows="3"></textarea>
     </div>
     <div class="form-group">
         <label>5. Hỗ trợ:</label>
-        <textarea id="hoTro" rows="2" placeholder="Cần học viên hay L&D hỗ trợ gì?"></textarea>
+        <textarea id="hoTro" rows="2"></textarea>
     </div>
     <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
-    <a href="../" style="display:block; text-align:center; margin-top:15px; color:var(--primary); text-decoration:none; font-size:0.9rem;">⬅ Quay lại trang chủ</a>
 </div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwEPIrrj0jc3nMsjlBzGEfrQaqVZEpTsW_w34Oklf7iXcXgNx9MhDgn4Q2U5T1_WfVS/exec";
     let ss1, ss2;
 
-    window.onload = function() {
-        // Khởi tạo SlimSelect với Search ENABLED
+    document.addEventListener('DOMContentLoaded', () => {
         ss1 = new SlimSelect({
             select: '#pbc1',
-            settings: { placeholderText: 'Đang tải...', showSearch: true, searchPlaceholder: 'Gõ để tìm nhanh...' },
-            events: { afterChange: (newVal) => { if (newVal[0].value) loadPBC2(newVal[0].value); } }
+            settings: { placeholderText: 'Tìm Kênh/Khối...', showSearch: true },
+            events: { afterChange: (v) => { if(v[0].value) loadPBC2(v[0].value); } }
         });
-
         ss2 = new SlimSelect({
             select: '#pbc2',
-            settings: { placeholderText: '-- Chọn PBC1 trước --', showSearch: true, searchPlaceholder: 'Tìm đơn vị...' },
-            events: { afterChange: (newVal) => { if (newVal[0].value) loadDinhHuong(newVal[0].value); } }
+            settings: { placeholderText: 'Tìm Phòng ban...', showSearch: true },
+            events: { afterChange: (v) => { if(v[0].value) loadDH(v[0].value); } }
         });
-
         fetchData('getPBC1');
-    };
+    });
 
-    function fetchData(action, params = '') {
-        fetch(`${API_URL}?action=${action}${params}&cache=${new Date().getTime()}`)
-            .then(res => res.json())
-            .then(data => {
-                const options = [{text: '-- Chọn --', value: '', placeholder: true}, ...data.map(i => ({text: i, value: i}))];
-                if (action === 'getPBC1') ss1.setData(options);
-                else if (action === 'getPBC2') ss2.setData(options);
-                else if (action === 'getDinhHuong') document.getElementById('dinhHuong').value = data;
-            });
+    async function fetchData(action, params = '') {
+        try {
+            const response = await fetch(`${API_URL}?action=${action}${params}&v=${Date.now()}`);
+            const data = await response.json();
+            const options = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+            if(action === 'getPBC1') ss1.setData(options);
+            else if(action === 'getPBC2') ss2.setData(options);
+            else if(action === 'getDinhHuong') document.getElementById('dinhHuong').value = data;
+        } catch(e) { console.error("Lỗi dữ liệu:", e); }
     }
 
-    function loadPBC2(pbc1) {
-        document.getElementById('dinhHuong').value = "";
-        ss2.setData([{text: 'Đang tải...', value: ''}]);
-        fetchData('getPBC2', `&pbc1=${encodeURIComponent(pbc1)}`);
-    }
-
-    function loadDinhHuong(pbc2) {
-        document.getElementById('dinhHuong').value = "Đang lấy...";
-        fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(pbc2)}`);
-    }
+    function loadPBC2(v) { document.getElementById('dinhHuong').value = ""; fetchData('getPBC2', `&pbc1=${encodeURIComponent(v)}`); }
+    function loadDH(v) { fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(v)}`); }
 
     function submitData() {
+        const btn = document.getElementById('btnSubmit');
         const payload = {
             pbc1: document.getElementById('pbc1').value,
             pbc2: document.getElementById('pbc2').value,
             dinhHuong: document.getElementById('dinhHuong').value,
-            noiDungChiTiet: document.getElementById('noiDungChiTiet').value,
+            noiDungChiTiet: document.getElementById('noiDung').value,
             hoTro: document.getElementById('hoTro').value
         };
-        if (!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) { alert("Thiếu thông tin!"); return; }
-        const btn = document.getElementById('btnSubmit');
+        if(!payload.pbc1 || !payload.pbc2) return alert("Vui lòng chọn mục 1 và 2!");
         btn.disabled = true; btn.innerText = "ĐANG GỬI...";
         fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-        .then(() => { alert("Thành công!"); location.reload(); });
+        .then(() => { alert("Đăng ký thành công!"); location.reload(); });
     }
 </script>
 </body>
