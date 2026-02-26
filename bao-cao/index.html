@@ -16,8 +16,7 @@
         input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; }
         input:focus, textarea:focus { border-color: var(--primary); outline: none; }
         
-        /* Progress & Loading */
-        #progressContainer { display: none; margin: 15px 0; background: #eee; border-radius: 10px; height: 10px; overflow: hidden; }
+        #progressContainer { display: none; margin: 15px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
         #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
         .loading-text { font-size: 0.8rem; color: var(--primary); font-style: italic; display: none; margin-top: -10px; margin-bottom: 10px; }
 
@@ -25,7 +24,6 @@
         #btnSubmit:disabled { background: #bbb; box-shadow: none; }
         
         .back-home { display: block; text-align: center; margin-top: 20px; color: #777; text-decoration: none; font-size: 0.85rem; }
-        .ss-main { border-radius: 8px !important; padding: 5px !important; }
     </style>
 </head>
 <body>
@@ -49,7 +47,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxes3uqNxSRPAbgiatxIFrfD2KstG2TwqZbD-47BPABLAkE29ZVLwsJB7cajilKwiqzTQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwZDeWtoSgydKCDHmAmWw62f4GMSTMfFUtqUcVaUtFcuGK8Ds0RbJ0dJmuHnV5xvtVlYw/exec";
     let ss1, ss2, ss3;
 
     window.onload = () => {
@@ -108,18 +106,22 @@
         if (file) {
             container.style.display = 'block';
             try {
-                // 1. Khởi tạo Resumable URL
+                // 1. Khởi tạo Resumable URL và nhận mã xác thực (Token)
                 const initRes = await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'initiateUpload', fileName: file.name, fileType: file.type })
                 });
-                const uploadUrl = await initRes.text();
-                if(!uploadUrl.startsWith("http")) throw new Error("Lỗi Server: " + uploadUrl);
-
-                // 2. Upload bằng XMLHttpRequest để tránh CORS Preflight và hiển thị %
-                const xhr = new XMLHttpRequest();
-                xhr.open("PUT", uploadUrl, true);
                 
+                const config = await initRes.json(); // Nhận JSON thay vì text
+                if(!config.uploadUrl) throw new Error("Lỗi Server: Không lấy được link upload.");
+
+                // 2. Upload file kèm mã xác thực Token để bypass CORS
+                const xhr = new XMLHttpRequest();
+                xhr.open("PUT", config.uploadUrl, true);
+                
+                // Đính kèm Token xác thực vào Header
+                xhr.setRequestHeader("Authorization", "Bearer " + config.token);
+
                 xhr.upload.onprogress = (e) => {
                     if (e.lengthComputable) {
                         const percent = Math.round((e.loaded / e.total) * 100);
@@ -143,27 +145,31 @@
 
                 fileUrl = await uploadPromise;
             } catch (err) {
-                alert(err);
+                alert("Lỗi tải file: " + err);
                 btn.disabled = false;
                 btn.innerText = "GỬI BÁO CÁO LẠI";
                 return;
             }
         }
 
-        // 3. Ghi Sheet
+        // 3. Ghi thông tin cuối cùng vào Google Sheets
         btn.innerText = "ĐANG LƯU DỮ LIỆU...";
         fetch(API_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'submitFinalData',
-                ...fields,
+                pbc1: fields.pbc1,
+                pbc2: fields.pbc2,
+                nhanSu: fields.nhanSu,
+                ngayChiaSe: fields.ngay,
+                noiDungChinh: fields.noiDung,
                 fileUrl: fileUrl
             })
         }).then(() => {
             alert("Báo cáo thành công!");
             window.location.href = "../index.html";
         }).catch(() => {
-            alert("File đã lên Drive của Học viện nhưng lưu Sheet hơi chậm. Bạn không cần nộp lại nhé!");
+            alert("Video đã lên Drive an toàn nhưng ghi Sheet bị trễ. Đừng nộp lại nhé!");
             window.location.href = "../index.html";
         });
     }
