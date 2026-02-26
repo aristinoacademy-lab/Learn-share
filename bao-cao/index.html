@@ -34,7 +34,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxD6S807nkCTKsxwIDcpQHmqpCSgqiwPuUBwpmyhoYQWkUOuiR7TADp3aaJYrvAKo5DAA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx9n9cKs34PQIVewZdOJqXN30gztERNtTY6JjYJBB9cu5jW-z4u-oG2BTYOumgG6roJpQ/exec";
     let ss1, ss2, ss3;
 
     window.onload = () => {
@@ -90,19 +90,19 @@
             });
 
             // Bước 3: Ghi dữ liệu vào Sheet
-            btn.innerText = "ĐANG LƯU BÁO CÁO...";
-            const finalRes = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'submitFinalData',
-                    pbc1: document.getElementById('pbc1').value,
-                    pbc2: document.getElementById('pbc2').value,
-                    nhanSu: document.getElementById('nhanSu').value,
-                    ngayChiaSe: document.getElementById('ngay').value,
-                    noiDungChinh: document.getElementById('noiDungChinh').value,
-                    fileUrl: `https://drive.google.com/open?id=${fileId}`
-                })
-            });
+btn.innerText = "ĐANG LƯU BÁO CÁO...";
+const finalRes = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+        action: 'submitFinalData',
+        pbc1: document.getElementById('pbc1').value,
+        pbc2: document.getElementById('pbc2').value,
+        nhanSu: document.getElementById('nhanSu').value,
+        ngayChiaSe: document.getElementById('ngay').value,
+        noiDungChinh: document.getElementById('noiDung').value, // Chú ý: dùng ID 'noiDung'
+        fileUrl: `https://drive.google.com/open?id=${fileId}`
+    })
+});
 
             const result = await finalRes.text();
             if (result === "SUCCESS") {
