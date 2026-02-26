@@ -3,36 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>L&S Báo Cáo | Aristino</title>
+    <title>L&S - Báo Cáo Ghi Nhận | Aristino</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #FB8C00; --dark-green: #1D713A; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f2f2f2; margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-        h2 { color: var(--dark-green); text-align: center; text-transform: uppercase; font-size: 1.2rem; }
+        :root { --primary: #FB8C00; --dark-green: #1D713A; --bg: #f2f2f2; }
+        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); box-sizing: border-box; }
+        h2 { color: var(--dark-green); text-align: center; font-size: 1.25rem; margin-bottom: 20px; text-transform: uppercase; font-weight: 800; }
         .form-group { margin-bottom: 15px; }
-        label { font-weight: 600; display: block; margin-bottom: 5px; font-size: 0.9rem; }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        #progressContainer { display: none; margin: 15px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
-        #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.2s; }
-        #btnSubmit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        #btnSubmit:disabled { background: #ccc; }
-        .back { display: block; text-align: center; margin-top: 15px; color: #666; text-decoration: none; font-size: 0.8rem; }
+        label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 0.9rem; color: #444; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; -webkit-appearance: none; }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; }
+        
+        /* Progress & Loading */
+        #progressContainer { display: none; margin: 15px 0; background: #eee; border-radius: 10px; height: 10px; overflow: hidden; }
+        #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
+        .loading-text { font-size: 0.8rem; color: var(--primary); font-style: italic; display: none; margin-top: -10px; margin-bottom: 10px; }
+
+        #btnSubmit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; box-shadow: 0 4px 10px rgba(251, 140, 0, 0.3); }
+        #btnSubmit:disabled { background: #bbb; box-shadow: none; }
+        
+        .back-home { display: block; text-align: center; margin-top: 20px; color: #777; text-decoration: none; font-size: 0.85rem; }
+        .ss-main { border-radius: 8px !important; padding: 5px !important; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>BÁO CÁO GHI NHẬN CHIA SẺ</h2>
+    <h2>L&S - BÁO CÁO GHI NHẬN</h2>
+    
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
-    <div class="form-group"><label>2. Phòng ban:</label><select id="pbc2"></select></div>
-    <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
-    <div class="form-group"><label>4. Ngày chia sẻ:</label><input type="date" id="ngay"></div>
-    <div class="form-group"><label>5. Nội dung:</label><textarea id="noiDung" rows="3"></textarea></div>
-    <div class="form-group"><label>6. Đính kèm (Tối đa 2GB):</label><input type="file" id="fileInput"></div>
+    <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select><div id="load2" class="loading-text">Đang tải phòng ban...</div></div>
+    <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select><div id="load3" class="loading-text">Đang tìm nhân sự...</div></div>
+    <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngayChiaSe"></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDungChinh" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
+    <div class="form-group">
+        <label>6. Đính kèm (Hỗ trợ file 2GB):</label>
+        <input type="file" id="fileInput">
+    </div>
+
     <div id="progressContainer"><div id="progressBar"></div></div>
+    
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
-    <a href="../" class="back">⬅ Quay lại trang chủ</a>
+    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
 </div>
 
 <script>
@@ -40,88 +53,119 @@
     let ss1, ss2, ss3;
 
     window.onload = () => {
-        ss1 = new SlimSelect({ select: '#pbc1', events: { afterChange: v => loadData('getPBC2_BC', `&pbc1=${encodeURIComponent(v[0].value)}`) } });
-        ss2 = new SlimSelect({ select: '#pbc2', events: { afterChange: v => loadData('getNhanSu_BC', `&pbc2=${encodeURIComponent(v[0].value)}`) } });
-        ss3 = new SlimSelect({ select: '#nhanSu' });
-        loadData('getPBC1_BC');
+        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => loadPBC2(v[0].value) } });
+        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => loadNhanSu(v[0].value) } });
+        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm Nhân sự' } });
+        fetchData('getPBC1_BC');
     };
 
-    async function loadData(action, params = '') {
-        const res = await fetch(`${API_URL}?action=${action}${params}`);
-        const data = await res.json();
-        const opts = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
-        if(action === 'getPBC1_BC') ss1.setData(opts);
-        else if(action === 'getPBC2_BC') ss2.setData(opts);
-        else if(action === 'getNhanSu_BC') ss3.setData(opts);
+    async function fetchData(action, params = '') {
+        try {
+            const res = await fetch(`${API_URL}?action=${action}${params}`, { method: 'GET', mode: 'cors' });
+            const data = await res.json();
+            const options = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
+            if(action === 'getPBC1_BC') ss1.setData(options);
+            else if(action === 'getPBC2_BC') { ss2.setData(options); document.getElementById('load2').style.display='none'; }
+            else if(action === 'getNhanSu_BC') { ss3.setData(options); document.getElementById('load3').style.display='none'; }
+        } catch (e) { console.error("Lỗi:", e); }
+    }
+
+    function loadPBC2(v) { 
+        if(!v) return;
+        document.getElementById('load2').style.display='block';
+        ss2.setData([{text: 'Đang tải...', value: ''}]); 
+        fetchData('getPBC2_BC', `&pbc1=${encodeURIComponent(v)}`); 
+    }
+    
+    function loadNhanSu(v) { 
+        if(!v) return;
+        document.getElementById('load3').style.display='block';
+        ss3.setData([{text: 'Đang tìm...', value: ''}]); 
+        fetchData('getNhanSu_BC', `&pbc2=${encodeURIComponent(v)}`); 
     }
 
     async function handleUpload() {
         const file = document.getElementById('fileInput').files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
-        if(!document.getElementById('pbc1').value || !document.getElementById('nhanSu').value) return alert("Vui lòng điền đủ thông tin!");
+        const container = document.getElementById('progressContainer');
+
+        const fields = {
+            pbc1: document.getElementById('pbc1').value,
+            pbc2: document.getElementById('pbc2').value,
+            nhanSu: document.getElementById('nhanSu').value,
+            ngay: document.getElementById('ngayChiaSe').value,
+            noiDung: document.getElementById('noiDungChinh').value
+        };
+
+        if(!fields.pbc1 || !fields.nhanSu || !fields.noiDung || !fields.ngay) return alert("Vui lòng điền đủ mục 1, 3, 4, 5!");
 
         btn.disabled = true;
         btn.innerText = "ĐANG KHỞI TẠO...";
+
         let fileUrl = "Không có đính kèm";
 
         if (file) {
-            document.getElementById('progressContainer').style.display = 'block';
+            container.style.display = 'block';
             try {
-                // Bước 1: Xin link upload (Dùng chế độ POST đơn giản để tránh CORS)
+                // 1. Khởi tạo Resumable URL
                 const initRes = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'cors',
                     body: JSON.stringify({ action: 'initiateUpload', fileName: file.name, fileType: file.type })
                 });
                 const uploadUrl = await initRes.text();
+                if(!uploadUrl.startsWith("http")) throw new Error("Lỗi Server: " + uploadUrl);
 
-                // Bước 2: Đẩy file trực tiếp (Dùng XMLHttpRequest để kiểm soát tiến độ và bypass CORS tốt hơn)
+                // 2. Upload bằng XMLHttpRequest để tránh CORS Preflight và hiển thị %
                 const xhr = new XMLHttpRequest();
                 xhr.open("PUT", uploadUrl, true);
                 
-                // Quan trọng: Không set thêm bất kỳ Header lạ nào ở đây để tránh kích hoạt CORS Preflight
                 xhr.upload.onprogress = (e) => {
                     if (e.lengthComputable) {
-                        const pct = Math.round((e.loaded / e.total) * 100);
-                        bar.style.width = pct + '%';
-                        btn.innerText = `ĐANG TẢI (${pct}%)...`;
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        bar.style.width = percent + '%';
+                        btn.innerText = `ĐANG TẢI FILE (${percent}%)...`;
                     }
                 };
 
                 const uploadPromise = new Promise((resolve, reject) => {
                     xhr.onload = () => {
-                        if (xhr.status === 200 || xhr.status === 201) {
-                            const res = JSON.parse(xhr.responseText);
-                            resolve(`https://drive.google.com/open?id=${res.id}`);
-                        } else { reject("Drive từ chối file: " + xhr.status); }
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            const resp = JSON.parse(xhr.responseText);
+                            resolve(`https://drive.google.com/open?id=${resp.id}`);
+                        } else {
+                            reject("Google từ chối file (Status: " + xhr.status + ")");
+                        }
                     };
-                    xhr.onerror = () => reject("Lỗi kết nối mạng. Hãy kiểm tra lại internet hoặc dung lượng file.");
+                    xhr.onerror = () => reject("Lỗi kết nối mạng khi đang tải.");
                     xhr.send(file);
                 });
 
                 fileUrl = await uploadPromise;
             } catch (err) {
-                alert(err); btn.disabled = false; btn.innerText = "THỬ LẠI"; return;
+                alert(err);
+                btn.disabled = false;
+                btn.innerText = "GỬI BÁO CÁO LẠI";
+                return;
             }
         }
 
-        // Bước 3: Ghi Sheet
-        btn.innerText = "ĐANG LƯU BÁO CÁO...";
-        await fetch(API_URL, {
+        // 3. Ghi Sheet
+        btn.innerText = "ĐANG LƯU DỮ LIỆU...";
+        fetch(API_URL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'submitFinalData',
-                pbc1: document.getElementById('pbc1').value,
-                pbc2: document.getElementById('pbc2').value,
-                nhanSu: document.getElementById('nhanSu').value,
-                ngayChiaSe: document.getElementById('ngay').value,
-                noiDungChinh: document.getElementById('noiDung').value,
+                ...fields,
                 fileUrl: fileUrl
             })
+        }).then(() => {
+            alert("Báo cáo thành công!");
+            window.location.href = "../index.html";
+        }).catch(() => {
+            alert("File đã lên Drive của Học viện nhưng lưu Sheet hơi chậm. Bạn không cần nộp lại nhé!");
+            window.location.href = "../index.html";
         });
-        alert("Thành công!");
-        window.location.href = "../index.html";
     }
 </script>
 </body>
