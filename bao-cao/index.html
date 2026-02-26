@@ -32,7 +32,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyytH1rwiN55fC5Z1bVl8LkrAf4mBoIJNXdxpD7MMLETRi1SN4qAD3DuV0siNYlw_a9/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxGFEnmo4Cl-xlDTGlh50Spc-Gxz_tt4vfdKqv7LreuF6qIY2owzBgnHLlfqbQ5XJY1/exec";
     let ss1, ss2, ss3;
 
     window.onload = () => {
@@ -52,50 +52,72 @@
     }
 
     async function handleUpload() {
-        const file = document.getElementById('fileInput').files[0];
-        const btn = document.getElementById('btnSubmit');
-        if(!file || !document.getElementById('pbc1').value) return alert("Vui lòng nhập đủ thông tin!");
+    const file = document.getElementById('fileInput').files[0];
+    const btn = document.getElementById('btnSubmit');
+    const bar = document.getElementById('progressBar');
+    
+    // Thu thập dữ liệu form
+    const pbc1 = document.getElementById('pbc1').value;
+    const pbc2 = document.getElementById('pbc2').value;
+    const nhanSu = document.getElementById('nhanSu').value;
+    const ngay = document.getElementById('ngay').value;
+    const noiDung = document.getElementById('noiDung').value;
 
-        btn.disabled = true;
-        btn.innerText = "ĐANG KHỞI TẠO...";
-        document.getElementById('progressContainer').style.display = 'block';
+    if(!file || !pbc1) return alert("Vui lòng chọn file và điền thông tin!");
 
-        try {
-            const initRes = await fetch(API_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    action: 'initiateUpload', 
-                    fileName: file.name,
-                    pbc1: document.getElementById('pbc1').value,
-                    pbc2: document.getElementById('pbc2').value,
-                    nhanSu: document.getElementById('nhanSu').value,
-                    ngayChiaSe: document.getElementById('ngay').value,
-                    noiDungChinh: document.getElementById('noiDung').value
-                }) 
-            });
-            const config = await initRes.json();
+    btn.disabled = true;
+    btn.innerText = "ĐANG KHỞI TẠO...";
+    document.getElementById('progressContainer').style.display = 'block';
 
-            const xhr = new XMLHttpRequest();
-            xhr.open("PUT", config.uploadUrl, true);
-            xhr.setRequestHeader("Authorization", "Bearer " + config.token);
-            xhr.upload.onprogress = (e) => {
-                const pct = Math.round((e.loaded / e.total) * 100);
-                document.getElementById('progressBar').style.width = pct + '%';
-                btn.innerText = `ĐANG TẢI VIDEO (${pct}%)...`;
-            };
+    try {
+        // Bước 1: Khởi tạo trên Google Sheets
+        const initRes = await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                action: 'initiateUpload', 
+                fileName: file.name,
+                pbc1, pbc2, nhanSu, ngayChiaSe: ngay, noiDungChinh: noiDung
+            }) 
+        });
+        const config = await initRes.json();
 
-            xhr.onload = async () => {
+        // Bước 2: Tải file lên Drive (Resumable Upload)
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", config.uploadUrl, true);
+        xhr.setRequestHeader("Authorization", "Bearer " + config.token);
+        
+        xhr.upload.onprogress = (e) => {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            bar.style.width = pct + '%';
+            btn.innerText = `ĐANG TẢI TÀI LIỆU (${pct}%)...`;
+        };
+
+        xhr.onload = async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
                 const fileId = JSON.parse(xhr.responseText).id;
+                const fileUrl = `https://drive.google.com/open?id=${fileId}`;
+
+                // Bước 3: Cập nhật link file thật vào Sheet báo cáo
+                btn.innerText = "ĐANG HOÀN TẤT...";
                 await fetch(API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'updateFileLink', rowIndex: config.rowIndex, fileUrl: `https://drive.google.com/open?id=${fileId}` })
+                    body: JSON.stringify({ 
+                        action: 'updateFileLink', 
+                        rowIndex: config.rowIndex, 
+                        fileUrl: fileUrl 
+                    })
                 });
-                alert("Thành công!");
+
+                alert("Gửi báo cáo thành công!");
                 location.reload();
-            };
-            xhr.send(file);
-        } catch (err) { alert("Lỗi: " + err); btn.disabled = false; }
+            } else {
+                throw new Error("Lỗi tải file lên Drive.");
+            }
+        };
+        xhr.send(file);
+    } catch (err) { 
+        alert("Lỗi hệ thống: " + err); 
+        btn.disabled = false;
+        btn.innerText = "GỬI LẠI BÁO CÁO";
     }
-</script>
-</body>
-</html>
+}
