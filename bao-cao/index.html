@@ -38,7 +38,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxaq4QdxyYO0fDGAiDlgpDi5CQspFIPolopwVEdQcuHHYIL7Sk6cHZ2DTrqr6icPoui9g/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzKYQqMWFBRIgFvOItCoJnLWMnSsUcWOtqzg8Rg6gxfngjV2EUklGjOTkAZDDRnneihfw/exec";
     let ss1, ss2, ss3;
 
     window.onload = () => {
@@ -74,67 +74,60 @@
         if(!pbc1 || !nhanSu || !ngay || !file) return alert("Vui lòng điền đủ thông tin (1, 3, 4) và chọn file!");
 
         btn.disabled = true;
-        btn.innerText = "ĐANG LƯU DỮ LIỆU & KHỞI TẠO...";
-        container.style.display = 'block';
+    btn.innerText = "ĐANG KHỞI TẠO...";
+    container.style.display = 'block';
 
-        try {
-            // Bước 1: Gửi thông tin để ghi Sheet trước và lấy Link Upload
-            const initRes = await fetch(API_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    action: 'initiateUpload', 
-                    fileName: file.name,
-                    fileType: file.type,
-                    pbc1: pbc1,
-                    pbc2: pbc2,
-                    nhanSu: nhanSu,
-                    ngayChiaSe: ngay,
-                    noiDungChinh: noiDung
-                }) 
-            });
-            const config = await initRes.json();
-            if(!config.uploadUrl) throw new Error("Không thể khởi tạo đường truyền.");
+    try {
+        const initRes = await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                action: 'initiateUpload', 
+                fileName: file.name,
+                pbc1: document.getElementById('pbc1').value,
+                pbc2: document.getElementById('pbc2').value,
+                nhanSu: document.getElementById('nhanSu').value,
+                ngayChiaSe: document.getElementById('ngay').value,
+                noiDungChinh: document.getElementById('noiDung').value
+            }) 
+        });
+        const config = await initRes.json();
 
-            // Bước 2: Tải file lên Google Drive
-            const xhr = new XMLHttpRequest();
-            xhr.open("PUT", config.uploadUrl, true);
-            xhr.setRequestHeader("Authorization", "Bearer " + config.token);
-            
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
-                    bar.style.width = pct + '%';
-                    btn.innerText = `ĐANG TẢI VIDEO (${pct}%)...`;
-                }
-            };
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", config.uploadUrl, true);
+        xhr.setRequestHeader("Authorization", "Bearer " + config.token);
+        
+        xhr.upload.onprogress = (e) => {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            bar.style.width = pct + '%';
+            btn.innerText = `ĐANG TẢI VIDEO (${pct}%)...`;
+        };
 
-            const fileId = await new Promise((resolve, reject) => {
-                xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve(JSON.parse(xhr.responseText).id) : reject("Drive từ chối file.");
-                xhr.onerror = () => reject("Lỗi kết nối mạng khi tải file.");
-                xhr.send(file);
-            });
+        xhr.onload = async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const fileId = JSON.parse(xhr.responseText).id;
+                const fileUrl = `https://drive.google.com/open?id=${fileId}`;
 
-            // Bước 3: Cập nhật Link file vào dòng vừa ghi trong Sheet
-            btn.innerText = "HOÀN TẤT BÁO CÁO...";
-            await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'updateFileLink',
-                    rowIndex: config.rowIndex,
-                    fileUrl: `https://drive.google.com/open?id=${fileId}`
-                })
-            });
+                // BƯỚC QUAN TRỌNG: Cập nhật lại link vào đúng dòng trong Sheet
+                btn.innerText = "ĐANG HOÀN TẤT...";
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateFileLink',
+                        rowIndex: config.rowIndex,
+                        fileUrl: fileUrl
+                    })
+                });
 
-            alert("Chúc mừng! Báo cáo của bạn đã được gửi thành công.");
-            window.location.href = "../index.html";
+                alert("Chúc mừng! Báo cáo của bạn đã được gửi thành công.");
+                window.location.href = "../index.html";
+            } else {
+                alert("File đã lên nhưng hệ thống chưa ghi nhận được link. Hãy báo L&D!");
+            }
+        };
+        xhr.send(file);
 
-        } catch (err) {
-            console.error(err);
-            alert("Lưu ý: " + err + ". Dữ liệu báo cáo đã được lưu, file có thể chưa lên. Hãy báo P.Đào tạo kiểm tra!");
-            btn.disabled = false;
-            btn.innerText = "GỬI BÁO CÁO LẠI";
-        }
+    } catch (err) {
+        alert("Lỗi kết nối: Dữ liệu văn bản đã lưu, nhưng link file chưa cập nhật.");
+        btn.disabled = false;
     }
-</script>
-</body>
-</html>
+}
