@@ -45,7 +45,7 @@ input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; bo
 <script>
 
 // ================== CẤU HÌNH ==================
-const API_URL = "https://script.google.com/macros/s/AKfycbyLSCV6qSY8SxSqNo21TzCbpOgIGsq5Yk4CnatGgd633B8fiOQKIfOZQz0dF2O2AjK4/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx3Q_cTJcJ0i2ZX2JB0p9GbOU-RIovcmXW04l6_OPqyb9YUmaM11wNjAb7hbbuO1OQ/exec";
 const CLIENT_ID = "888083778828";
 // ==============================================
 
@@ -144,6 +144,11 @@ async function handleUpload(){
     });
 
     const config = await initRes.json();
+    if(config.error){
+  alert(config.error);
+  btn.disabled = false;
+  return;
+}
 
     // 2️⃣ Lấy token Google
     const token = await getAccessToken();
