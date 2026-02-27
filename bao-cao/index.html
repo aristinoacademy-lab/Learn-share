@@ -24,26 +24,21 @@
 <body>
 <div class="container">
     <h2>L&S - BÁO CÁO CHIA SẺ</h2>
-    
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
     <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
     <div class="form-group"><label>6. Đính kèm (Tài liệu/Video):</label><input type="file" id="fileInput"></div>
-    
     <div id="progressContainer"><div id="progressBar"></div></div>
-    
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
     <div class="footer-text">Hệ thống L&S - Học viện Aristino</div>
 </div>
 
 <script>
-    // THAY LINK WEB APP CỦA BẠN VÀO ĐÂY
-    const API_URL = "https://script.google.com/macros/s/AKfycby3bosKG8oqA45AIuaG3Z56N02IUUt8nvZ-GTtUAn03OgxM6gKPIXwj_jtyW7yMmgs/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwP1nMx2yWBhnvvxnxckuTvhR-kH9dVd1WspBGega4LNOnZ35z5qrh87SAH2DxRYMOf/exec";
     let ss1, ss2, ss3;
 
-    // Khởi tạo danh mục khi load trang
     window.onload = () => {
         ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => loadData('getPBC2_BC', `&pbc1=${encodeURIComponent(v[0].value)}`) } });
         ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => loadData('getNhanSu_BC', `&pbc2=${encodeURIComponent(v[0].value)}`) } });
@@ -59,12 +54,12 @@
             if(action === 'getPBC1_BC') ss1.setData(opts);
             else if(action === 'getPBC2_BC') ss2.setData(opts);
             else if(action === 'getNhanSu_BC') ss3.setData(opts);
-        } catch (e) { console.error("Lỗi tải danh mục:", e); }
+        } catch (e) { console.error("Lỗi CORS/Mạng:", e); }
     }
 
-    // HÀM XỬ LÝ UPLOAD CHUẨN DỨT KHOÁT
     async function handleUpload() {
-        const file = document.getElementById('fileInput').files[0];
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
         
@@ -72,14 +67,14 @@
         const nhanSu = document.getElementById('nhanSu').value;
         const ngay = document.getElementById('ngay').value;
 
-        if(!file || !pbc1 || !nhanSu || !ngay) return alert("Vui lòng nhập đủ thông tin (1, 3, 4) và chọn file!");
+        if(!file || !pbc1 || !nhanSu || !ngay) return alert("Vui lòng điền đủ thông tin 1, 3, 4 và chọn file!");
 
         btn.disabled = true;
-        btn.innerText = "ĐANG KHỞI TẠO LUỒNG...";
+        btn.innerText = "ĐANG KHỞI TẠO...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
-            // Bước 1: Gọi Apps Script để mở luồng Resumable và ghi Sheet trước
+            // Bước 1: Gọi initiateUpload (Ghi sheet & lấy Resumable Link)
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
@@ -95,7 +90,7 @@
             const config = await initRes.json();
             if(config.error) throw new Error(config.error);
 
-            // Bước 2: Tải dữ liệu vào luồng đã mở (Resumable Upload)
+            // Bước 2: Upload file (Dùng PUT cho Resumable Upload - Hỗ trợ 1GB+)
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
             
@@ -110,11 +105,11 @@
             xhr.onload = async () => {
                 if (xhr.status === 200 || xhr.status === 201) {
                     const driveResp = JSON.parse(xhr.responseText);
-                    const fileUrl = `https://drive.google.com/open?id=${driveResp.id}`;
+                    const fileUrl = `https://drive.google.com/file/d/${driveResp.id}/view`;
 
-                    // Bước 3: Cập nhật link thật vào Sheet báo cáo
-                    btn.innerText = "ĐANG LƯU LINK FILE...";
-                    await fetch(API_URL, {
+                    // Bước 3: Cập nhật link file vào Sheet
+                    btn.innerText = "ĐANG LƯU LINK...";
+                    const updateRes = await fetch(API_URL, {
                         method: 'POST',
                         body: JSON.stringify({ 
                             action: 'updateLink', 
@@ -123,10 +118,12 @@
                         })
                     });
 
-                    alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
-                    location.reload();
+                    if (updateRes.ok) {
+                        alert("CHÚC MỪNG! BÁO CÁO VÀ FILE ĐÃ GỬI THÀNH CÔNG.");
+                        location.reload();
+                    }
                 } else {
-                    alert("Lỗi tải lên Google Drive (Status: " + xhr.status + ")");
+                    alert("Lỗi Drive: " + xhr.status);
                     btn.disabled = false;
                 }
             };
@@ -135,9 +132,8 @@
             xhr.send(file);
 
         } catch (err) { 
-            alert("Lỗi hệ thống: " + err); 
-            btn.disabled = false;
-            btn.innerText = "GỬI BÁO CÁO";
+            alert("Lỗi: " + err.message); 
+            btn.disabled = false; 
         }
     }
 </script>
