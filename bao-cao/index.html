@@ -131,10 +131,7 @@
         };
 
         xhr.send(file);
-
-// Thiết lập thời gian chờ cực dài cho file 1GB
-xhr.timeout = 1800000; // 30 phút
-
+            
         } catch (err) { 
             alert("Lỗi hệ thống: " + err.message); 
             btn.disabled = false; 
