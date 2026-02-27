@@ -1,148 +1,188 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>L&S Báo Cáo | Aristino</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
-    <style>
-        :root { --primary: #FB8C00; --green: #1D713A; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 480px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; font-weight: 800; }
-        .form-group { margin-bottom: 12px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
-        #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
-        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
-        #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
-        .footer-text { text-align: center; margin-top: 15px; color: #999; font-size: 0.75rem; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>L&S Báo Cáo | Học viện Aristino</title>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
+
+<style>
+:root { --primary: #FB8C00; --green: #1D713A; }
+body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; }
+.container { width: 100%; max-width: 480px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; font-weight: 800; }
+.form-group { margin-bottom: 12px; }
+label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
+input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+#progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
+#progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
+#btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+#btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
+.footer-text { text-align: center; margin-top: 15px; color: #999; font-size: 0.75rem; }
+</style>
 </head>
+
 <body>
 <div class="container">
-    <h2>L&S - BÁO CÁO CHIA SẺ</h2>
-    <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
-    <div class="form-group"><label>2. Khu vực/Phòng ban:</label><select id="pbc2"></select></div>
-    <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
-    <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
-    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
-    <div class="form-group"><label>6. Đính kèm (Tài liệu/Video):</label><input type="file" id="fileInput"></div>
-    
-    <div id="progressContainer"><div id="progressBar"></div></div>
-    
-    <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
-    <div class="footer-text">Hệ thống L&D Aristino - ForLife</div>
+<h2>L&S - BÁO CÁO CHIA SẺ</h2>
+
+<div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
+<div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
+<div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
+<div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
+<div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3"></textarea></div>
+<div class="form-group"><label>6. Đính kèm:</label><input type="file" id="fileInput"></div>
+
+<div id="progressContainer"><div id="progressBar"></div></div>
+
+<button id="btnSubmit">GỬI BÁO CÁO</button>
+<div class="footer-text">Hệ thống L&S Học viện Aristino</div>
 </div>
 
 <script>
-    // THAY LINK WEB APP MỚI NHẤT CỦA BẠN VÀO ĐÂY
-    const API_URL = "https://script.google.com/macros/s/AKfycbwExznd_71maIyNcLGk88d6qJ6ud-ci0oHad0akjj1XShixTvMQwpa8KixIzYRohTzZ/exec";
-    let ss1, ss2, ss3;
 
-    window.onload = () => {
-        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => loadData('getPBC2_BC', `&pbc1=${encodeURIComponent(v[0].value)}`) } });
-        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => loadData('getNhanSu_BC', `&pbc2=${encodeURIComponent(v[0].value)}`) } });
-        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm tên nhân sự...' } });
-        loadData('getPBC1_BC');
+// ================== CẤU HÌNH ==================
+const API_URL = "https://script.google.com/macros/s/AKfycbyLSCV6qSY8SxSqNo21TzCbpOgIGsq5Yk4CnatGgd633B8fiOQKIfOZQz0dF2O2AjK4/exec";
+const CLIENT_ID = "888083778828";
+// ==============================================
+
+let ss1, ss2, ss3;
+let tokenClient;
+let accessToken = null;
+
+// ===== OAuth =====
+function initOAuth() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: "https://www.googleapis.com/auth/drive.file",
+    callback: (resp) => {
+      accessToken = resp.access_token;
+    }
+  });
+}
+
+function getAccessToken() {
+  return new Promise((resolve) => {
+    tokenClient.callback = (resp) => {
+      accessToken = resp.access_token;
+      resolve(accessToken);
+    };
+    tokenClient.requestAccessToken();
+  });
+}
+
+// ===== Slim Select =====
+window.onload = () => {
+
+  initOAuth();
+
+  ss1 = new SlimSelect({
+    select: '#pbc1',
+    settings: { placeholderText: 'Chọn Kênh/Khối' },
+    events: { afterChange: v => loadData('getPBC2_BC', `&pbc1=${encodeURIComponent(v[0].value)}`) }
+  });
+
+  ss2 = new SlimSelect({
+    select: '#pbc2',
+    settings: { placeholderText: 'Chọn Phòng ban' },
+    events: { afterChange: v => loadData('getNhanSu_BC', `&pbc2=${encodeURIComponent(v[0].value)}`) }
+  });
+
+  ss3 = new SlimSelect({
+    select: '#nhanSu',
+    settings: { placeholderText: 'Tìm tên nhân sự...' }
+  });
+
+  loadData('getPBC1_BC');
+};
+
+async function loadData(action, params = '') {
+  const res = await fetch(`${API_URL}?action=${action}${params}`);
+  const data = await res.json();
+  const opts = [{text:'-- Chọn --', value:''}, ...data.map(i=>({text:i,value:i}))];
+
+  if(action==='getPBC1_BC') ss1.setData(opts);
+  if(action==='getPBC2_BC') ss2.setData(opts);
+  if(action==='getNhanSu_BC') ss3.setData(opts);
+}
+
+// ===== UPLOAD =====
+document.getElementById("btnSubmit").addEventListener("click", handleUpload);
+
+async function handleUpload(){
+
+  const file = document.getElementById('fileInput').files[0];
+  if(!file) return alert("Chưa chọn file");
+
+  const dataForm = {
+    pbc1: document.getElementById('pbc1').value,
+    pbc2: document.getElementById('pbc2').value,
+    nhanSu: document.getElementById('nhanSu').value,
+    ngayChiaSe: document.getElementById('ngay').value,
+    noiDungChinh: document.getElementById('noiDung').value
+  };
+
+  const btn = document.getElementById('btnSubmit');
+  const bar = document.getElementById('progressBar');
+
+  btn.disabled = true;
+  document.getElementById('progressContainer').style.display='block';
+
+  try {
+
+    // 1️⃣ Tạo file rỗng + ghi Sheet
+    const initRes = await fetch(API_URL,{
+      method:'POST',
+      body:JSON.stringify({
+        action:'initiateUpload',
+        fileName:file.name,
+        ...dataForm
+      })
+    });
+
+    const config = await initRes.json();
+
+    // 2️⃣ Lấy token Google
+    const token = await getAccessToken();
+
+    // 3️⃣ Upload nội dung vào file đã tạo
+    const xhr = new XMLHttpRequest();
+    xhr.open("PATCH",
+      `https://www.googleapis.com/upload/drive/v3/files/${config.fileId}?uploadType=media`,
+      true
+    );
+
+    xhr.setRequestHeader("Authorization","Bearer "+token);
+
+    xhr.upload.onprogress = (e)=>{
+      if(e.lengthComputable){
+        const pct = Math.round((e.loaded/e.total)*100);
+        bar.style.width = pct+'%';
+        btn.innerText = `ĐANG TẢI (${pct}%)...`;
+      }
     };
 
-    async function loadData(action, params = '') {
-        try {
-            const res = await fetch(`${API_URL}?action=${action}${params}`);
-            const data = await res.json();
-            const opts = [{text: '-- Chọn --', value: ''}, ...data.map(i => ({text: i, value: i}))];
-            if(action === 'getPBC1_BC') ss1.setData(opts);
-            else if(action === 'getPBC2_BC') ss2.setData(opts);
-            else if(action === 'getNhanSu_BC') ss3.setData(opts);
-        } catch (e) { console.error("Lỗi tải danh mục:", e); }
-    }
+    xhr.onload = ()=>{
+      if(xhr.status===200){
+        alert("Báo cáo đã gửi thành công.");
+        location.reload();
+      }else{
+        alert("Upload lỗi. File đã tạo nhưng chưa có nội dung.");
+        btn.disabled=false;
+      }
+    };
 
-    async function handleUpload() {
-        const file = document.getElementById('fileInput').files[0];
-        const btn = document.getElementById('btnSubmit');
-        const bar = document.getElementById('progressBar');
-        
-        const dataForm = {
-            pbc1: document.getElementById('pbc1').value,
-            pbc2: document.getElementById('pbc2').value,
-            nhanSu: document.getElementById('nhanSu').value,
-            ngay: document.getElementById('ngay').value,
-            noiDung: document.getElementById('noiDung').value
-        };
+    xhr.send(file);
 
-        if(!file || !dataForm.pbc1 || !dataForm.nhanSu) return alert("Vui lòng điền đủ thông tin 1, 3 và chọn file!");
+  } catch(err){
+    alert("Lỗi hệ thống: "+err);
+    btn.disabled=false;
+  }
+}
 
-        btn.disabled = true;
-        btn.innerText = "ĐANG KHỞI TẠO...";
-        document.getElementById('progressContainer').style.display = 'block';
-
-        try {
-            // Bước 1: Ghi thông tin xuống Sheet trước để lấy Link Upload và vị trí dòng (rowIndex)
-            const initRes = await fetch(API_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    action: 'initiateUpload', 
-                    fileName: file.name,
-                    ...dataForm,
-                    ngayChiaSe: dataForm.ngay,
-                    noiDungChinh: dataForm.noiDung
-                }) 
-            });
-            const config = await initRes.json();
-
-            // Bước 2: Tải file lên Google Drive
-            const xhr = new XMLHttpRequest();
-            xhr.open("PUT", config.uploadUrl, true);
-            xhr.setRequestHeader("Authorization", "Bearer " + config.token);
-            
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
-                    bar.style.width = pct + '%';
-                    btn.innerText = `ĐANG TẢI TÀI LIỆU (${pct}%)...`;
-                }
-            };
-
-            xhr.onload = async () => {
-                if (xhr.status === 200 || xhr.status === 201) {
-                    const driveResp = JSON.parse(xhr.responseText);
-                    const fileUrl = `https://drive.google.com/open?id=${driveResp.id}`;
-
-                    // Bước 3: Cập nhật link Drive vào đúng dòng trong Sheet
-                    btn.innerText = "HOÀN TẤT GHI CHÚ...";
-                    const updateRes = await fetch(API_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ 
-                            action: 'updateFileLink', 
-                            rowIndex: config.rowIndex, 
-                            fileUrl: fileUrl 
-                        })
-                    });
-
-                    const status = await updateRes.text();
-                    if (status === "SUCCESS") {
-                        alert("Chúc mừng! Báo cáo của bạn đã được gửi thành công.");
-                        location.reload(); // Reset form
-                    } else {
-                        alert("File đã lên Drive nhưng lỗi cập nhật link Sheet. Vui lòng báo L&D kiểm tra dòng: " + config.rowIndex);
-                    }
-                } else {
-                    throw new Error("Google Drive từ chối file (Lỗi " + xhr.status + ")");
-                }
-            };
-
-            xhr.onerror = () => { alert("Lỗi kết nối mạng khi đang tải file."); btn.disabled = false; };
-            xhr.send(file);
-
-        } catch (err) { 
-            alert("Lỗi hệ thống: " + err); 
-            btn.disabled = false;
-            btn.innerText = "GỬI LẠI BÁO CÁO";
-        }
-    }
 </script>
 </body>
 </html>
