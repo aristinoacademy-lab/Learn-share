@@ -40,7 +40,7 @@
 
 <script>
     // CHÚ Ý: Thay link Web App mới nhất của bạn vào đây
-    const API_URL = "https://script.google.com/macros/s/AKfycby1LcgGfYWPCQiEyYZV6ekHDxQccqgHm1QDHKWePKJTW4P2du47dcemPkVIUyDAb-YarQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbylUlzMU16juOSPqiS4Iq8PgnFN6GhYFwWMubS9gHGC2m4t839SS5bk__YnKvvms7i_IQ/exec";
     
     let allData = []; // Lưu trữ toàn bộ danh mục nhân sự
     let ss1, ss2, ss3;
@@ -79,73 +79,54 @@
     }
 
     async function handleUpload() {
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
+        const file = document.getElementById('fileInput').files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
-        
-        const nhanSu = document.getElementById('nhanSu').value;
-        if(!file || !nhanSu) return alert("Vui lòng điền đủ thông tin và chọn file!");
+        if(!file || !document.getElementById('nhanSu').value) return alert("Thiếu thông tin!");
 
         btn.disabled = true;
         btn.innerText = "ĐANG KHỞI TẠO...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
-            // Bước 1: Khởi tạo luồng Resumable Upload
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
                     action: 'initiateUpload',
                     fileName: file.name,
-                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
                     pbc1: document.getElementById('pbc1').value,
                     pbc2: document.getElementById('pbc2').value,
-                    nhanSu: nhanSu,
+                    nhanSu: document.getElementById('nhanSu').value,
                     ngayChiaSe: document.getElementById('ngay').value,
                     noiDungChinh: document.getElementById('noiDung').value
                 }) 
             });
             const config = await initRes.json();
-            if(config.error) throw new Error(config.error);
 
-            // Bước 2: Tải dữ liệu thật lên Drive (PUT)
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
-            
             xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
-                    bar.style.width = pct + '%';
-                    btn.innerText = `ĐANG TẢI: ${pct}%`;
-                }
+                const pct = Math.round((e.loaded / e.total) * 100);
+                bar.style.width = pct + '%';
+                btn.innerText = `ĐANG TẢI: ${pct}%`;
             };
 
             xhr.onload = async () => {
                 if (xhr.status === 200 || xhr.status === 201) {
-                    const driveResp = JSON.parse(xhr.responseText);
-                    const fileLink = `https://drive.google.com/file/d/${driveResp.id}/view`;
+                    const driveId = JSON.parse(xhr.responseText).id;
+                    const fileLink = `https://drive.google.com/file/d/${driveId}/view`;
 
-                    // Bước 3: Cập nhật Link file vào lại Sheet
-                    btn.innerText = "ĐANG LƯU DỮ LIỆU...";
                     await fetch(API_URL, {
                         method: 'POST',
                         body: JSON.stringify({ action: 'updateLink', rowIndex: config.rowIndex, fileLink: fileLink })
                     });
 
-                    alert("CHÚC MỪNG! BÁO CÁO VÀ FILE ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
+                    alert("CHÚC MỪNG! BÁO CÁO VÀ FILE ĐÃ GỬI THÀNH CÔNG.");
                     location.reload();
-                } else {
-                    throw new Error("Lỗi Google Drive: " + xhr.status);
-                }
+                } else { alert("Lỗi tải file: " + xhr.status); btn.disabled = false; }
             };
             xhr.send(file);
-
-        } catch (err) { 
-            alert("Lỗi: " + err.message); 
-            btn.disabled = false; 
-            btn.innerText = "GỬI BÁO CÁO";
-        }
+        } catch (err) { alert("Lỗi hệ thống: " + err); btn.disabled = false; }
     }
 </script>
 </body>
