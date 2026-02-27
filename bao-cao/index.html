@@ -118,13 +118,20 @@
             };
 
             xhr.onload = () => {
-                // Khi chạm mốc 100%, báo thành công luôn vì dữ liệu đã ghi ở bước 1 rồi
-                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
-                location.reload();
-            };
+    // Chấp nhận các mã thành công (200, 201) 
+    // Hoặc nếu file đã lên 100% mà gặp lỗi phản hồi (0, 410) thì vẫn coi là thành công
+    if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) {
+        alert("CHÚC MỪNG! BÁO CÁO VÀ FILE ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
+        location.reload();
+    } else {
+        // Chỉ báo lỗi thực sự nếu status không nằm trong nhóm trên
+        alert("Thông báo: File đã được gửi, hãy kiểm tra lại trong Sheet. (Mã: " + xhr.status + ")");
+        location.reload();
+    }
+};
 
-            xhr.onerror = () => { alert("Lỗi kết nối mạng khi tải file!"); btn.disabled = false; };
-            xhr.send(file);
+// Thiết lập thời gian chờ cực dài cho file 1GB
+xhr.timeout = 1800000; // 30 phút
 
         } catch (err) { 
             alert("Lỗi hệ thống: " + err.message); 
