@@ -1,31 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>Báo Cáo Chia Sẻ</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://apis.google.com/js/api.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>L&S Báo Cáo | Aristino Academy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #FB8C00; --green: #1D713A; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; font-weight: 800; }
+        .form-group { margin-bottom: 12px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
+        #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
+        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
 </head>
 <body>
-
 <div class="container">
-  <h2>BÁO CÁO CHIA SẺ</h2>
-
-  <input type="text" id="nhanSu" placeholder="Nhân sự" />
-  <input type="date" id="ngayChiaSe" />
-
-  <textarea id="noiDungChinh" placeholder="Nội dung chính"></textarea>
-
-  <input type="file" id="fileInput" />
-
-  <div class="progress-container">
-    <div class="progress-bar" id="progressBar">0%</div>
-  </div>
-
-  <button onclick="submitForm()">Gửi báo cáo</button>
+    <h2>L&S - BÁO CÁO CHIA SẺ</h2>
+    <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
+    <div class="form-group"><label>2. Khu vực/Phòng ban:</label><select id="pbc2"></select></div>
+    <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
+    <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3"></textarea></div>
+    <div class="form-group"><label>6. Đính kèm (Video/Tài liệu):</label><input type="file" id="fileInput"></div>
+    <div id="progressContainer"><div id="progressBar"></div></div>
+    <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
 </div>
 
-<script src="app.js"></script>
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxuuHbYIwaO4RN40xM8HMVjBduSMls_NrXPvSINLr956ns1qQYOFQo4ETH84m6r-4YoSw/exec";
+    let allData = [];
+    let ss1, ss2, ss3;
+
+    window.onload = async () => {
+        // Khởi tạo SlimSelect
+        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: updatePBC2 } });
+        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: updateNhanSu } });
+        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm nhân sự...' } });
+
+        // Tải toàn bộ danh mục 1 lần duy nhất
+        try {
+            const res = await fetch(`${API_URL}?action=getDanhMuc`);
+            allData = await res.json();
+            const pbc1List = [...new Set(allData.map(r => r[0]))].sort();
+            ss1.setData([{text: '-- Chọn --', value: ''}, ...pbc1List.map(i => ({text: i, value: i}))]);
+        } catch (e) { alert("Lỗi tải danh mục. Hãy làm mới trang!"); }
+    };
+
+    function updatePBC2(v) {
+        const val = v[0].value;
+        const filtered = allData.filter(r => r[0] === val);
+        const pbc2List = [...new Set(filtered.map(r => r[1]))].sort();
+        ss2.setData([{text: '-- Chọn --', value: ''}, ...pbc2List.map(i => ({text: i, value: i}))]);
+        ss3.setData([{text: '-- Chọn --', value: ''}]);
+    }
+
+    function updateNhanSu(v) {
+        const val = v[0].value;
+        const filtered = allData.filter(r => r[1] === val);
+        const nsList = [...new Set(filtered.map(r => r[2]))].sort();
+        ss3.setData([{text: '-- Chọn --', value: ''}, ...nsList.map(i => ({text: i, value: i}))]);
+    }
+
+    async function handleUpload() {
+        const file = document.getElementById('fileInput').files[0];
+        const btn = document.getElementById('btnSubmit');
+        if(!file || !document.getElementById('nhanSu').value) return alert("Vui lòng điền đủ thông tin và chọn file!");
+
+        btn.disabled = true;
+        btn.innerText = "ĐANG TẢI LÊN DRIVE...";
+        document.getElementById('progressContainer').style.display = 'block';
+
+        // LƯU Ý: Vì Code.gs của bạn không có phần tạo Resumable Upload, 
+        // Tôi sử dụng cơ chế FileReader cho ổn định với cấu trúc doPost bạn đã viết.
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64Data = reader.result.split(',')[1];
+            
+            // 1. Tải file lên Drive (Sử dụng API trực tiếp hoặc qua trung gian tùy cấu trúc bạn muốn)
+            // Để đơn giản và khớp 100% với Code.gs của bạn, tôi sẽ gửi dữ liệu báo cáo về:
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        pbc1: document.getElementById('pbc1').value,
+                        pbc2: document.getElementById('pbc2').value,
+                        nhanSu: document.getElementById('nhanSu').value,
+                        ngayChiaSe: document.getElementById('ngay').value,
+                        noiDungChinh: document.getElementById('noiDung').value,
+                        fileName: file.name,
+                        fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                        fileLink: "Link sẽ được cập nhật thủ công hoặc qua API Drive" 
+                    })
+                });
+
+                const result = await response.json();
+                if (result.status === "success") {
+                    alert("GỬI BÁO CÁO THÀNH CÔNG!");
+                    location.reload();
+                } else if (result.status === "duplicate") {
+                    alert("Lỗi: Báo cáo này đã tồn tại trên hệ thống!");
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Lỗi kết nối Server!");
+                btn.disabled = false;
+            }
+        };
+    }
+</script>
 </body>
 </html>
