@@ -11,109 +11,141 @@
         body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; font-weight: 800; }
-        .form-group { margin-bottom: 12px; }
+        .form-group { margin-bottom: 15px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
         #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
-        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
         #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
+        .footer-text { text-align: center; margin-top: 15px; color: #999; font-size: 0.75rem; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>L&S - BÁO CÁO CHIA SẺ</h2>
+    
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
-    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3"></textarea></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
     <div class="form-group"><label>6. Đính kèm (Video/Tài liệu):</label><input type="file" id="fileInput"></div>
+    
     <div id="progressContainer"><div id="progressBar"></div></div>
+    
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
+    <div class="footer-text">Hệ thống L&D Aristino - K&G Việt Nam</div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxuuHbYIwaO4RN40xM8HMVjBduSMls_NrXPvSINLr956ns1qQYOFQo4ETH84m6r-4YoSw/exec";
-    let allData = [];
+    // CHÚ Ý: Thay link Web App mới nhất của bạn vào đây
+    const API_URL = "https://script.google.com/macros/s/AKfycby1LcgGfYWPCQiEyYZV6ekHDxQccqgHm1QDHKWePKJTW4P2du47dcemPkVIUyDAb-YarQ/exec";
+    
+    let allData = []; // Lưu trữ toàn bộ danh mục nhân sự
     let ss1, ss2, ss3;
 
     window.onload = async () => {
-        // Khởi tạo SlimSelect
-        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: updatePBC2 } });
-        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: updateNhanSu } });
+        // Khởi tạo các thanh chọn thông minh
+        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => updatePBC2(v[0].value) } });
+        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
         ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm nhân sự...' } });
 
-        // Tải toàn bộ danh mục 1 lần duy nhất
+        // Tải danh mục một lần duy nhất để tránh lỗi CORS và trắng thanh cuộn
         try {
             const res = await fetch(`${API_URL}?action=getDanhMuc`);
             allData = await res.json();
-            const pbc1List = [...new Set(allData.map(r => r[0]))].sort();
-            ss1.setData([{text: '-- Chọn --', value: ''}, ...pbc1List.map(i => ({text: i, value: i}))]);
-        } catch (e) { alert("Lỗi tải danh mục. Hãy làm mới trang!"); }
+            
+            const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
+            ss1.setData([{text: '-- Chọn Kênh --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
+        } catch (e) {
+            console.error(e);
+            alert("Không tải được danh sách nhân sự. Hãy kiểm tra quyền 'Anyone' của Web App!");
+        }
     };
 
-    function updatePBC2(v) {
-        const val = v[0].value;
-        const filtered = allData.filter(r => r[0] === val);
-        const pbc2List = [...new Set(filtered.map(r => r[1]))].sort();
-        ss2.setData([{text: '-- Chọn --', value: ''}, ...pbc2List.map(i => ({text: i, value: i}))]);
+    function updatePBC2(val) {
+        if (!val) return ss2.setData([{text: '-- Chọn --', value: ''}]);
+        const list2 = [...new Set(allData.filter(r => r[0] === val).map(r => r[1]))].filter(String).sort();
+        ss2.setData([{text: '-- Chọn Phòng ban --', value: ''}, ...list2.map(i => ({text: i, value: i}))]);
         ss3.setData([{text: '-- Chọn --', value: ''}]);
     }
 
-    function updateNhanSu(v) {
-        const val = v[0].value;
-        const filtered = allData.filter(r => r[1] === val);
-        const nsList = [...new Set(filtered.map(r => r[2]))].sort();
-        ss3.setData([{text: '-- Chọn --', value: ''}, ...nsList.map(i => ({text: i, value: i}))]);
+    function updateNhanSu(val) {
+        if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
+        const pbc1Val = document.getElementById('pbc1').value;
+        const list3 = [...new Set(allData.filter(r => r[0] === pbc1Val && r[1] === val).map(r => r[2]))].filter(String).sort();
+        ss3.setData([{text: '-- Chọn Nhân sự --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
     }
 
     async function handleUpload() {
-        const file = document.getElementById('fileInput').files[0];
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
-        if(!file || !document.getElementById('nhanSu').value) return alert("Vui lòng điền đủ thông tin và chọn file!");
+        const bar = document.getElementById('progressBar');
+        
+        const nhanSu = document.getElementById('nhanSu').value;
+        if(!file || !nhanSu) return alert("Vui lòng điền đủ thông tin và chọn file!");
 
         btn.disabled = true;
-        btn.innerText = "ĐANG TẢI LÊN DRIVE...";
+        btn.innerText = "ĐANG KHỞI TẠO...";
         document.getElementById('progressContainer').style.display = 'block';
 
-        // LƯU Ý: Vì Code.gs của bạn không có phần tạo Resumable Upload, 
-        // Tôi sử dụng cơ chế FileReader cho ổn định với cấu trúc doPost bạn đã viết.
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            const base64Data = reader.result.split(',')[1];
-            
-            // 1. Tải file lên Drive (Sử dụng API trực tiếp hoặc qua trung gian tùy cấu trúc bạn muốn)
-            // Để đơn giản và khớp 100% với Code.gs của bạn, tôi sẽ gửi dữ liệu báo cáo về:
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        pbc1: document.getElementById('pbc1').value,
-                        pbc2: document.getElementById('pbc2').value,
-                        nhanSu: document.getElementById('nhanSu').value,
-                        ngayChiaSe: document.getElementById('ngay').value,
-                        noiDungChinh: document.getElementById('noiDung').value,
-                        fileName: file.name,
-                        fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
-                        fileLink: "Link sẽ được cập nhật thủ công hoặc qua API Drive" 
-                    })
-                });
+        try {
+            // Bước 1: Khởi tạo luồng Resumable Upload
+            const initRes = await fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    action: 'initiateUpload',
+                    fileName: file.name,
+                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    pbc1: document.getElementById('pbc1').value,
+                    pbc2: document.getElementById('pbc2').value,
+                    nhanSu: nhanSu,
+                    ngayChiaSe: document.getElementById('ngay').value,
+                    noiDungChinh: document.getElementById('noiDung').value
+                }) 
+            });
+            const config = await initRes.json();
+            if(config.error) throw new Error(config.error);
 
-                const result = await response.json();
-                if (result.status === "success") {
-                    alert("GỬI BÁO CÁO THÀNH CÔNG!");
-                    location.reload();
-                } else if (result.status === "duplicate") {
-                    alert("Lỗi: Báo cáo này đã tồn tại trên hệ thống!");
-                    btn.disabled = false;
+            // Bước 2: Tải dữ liệu thật lên Drive (PUT)
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", config.uploadUrl, true);
+            
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    bar.style.width = pct + '%';
+                    btn.innerText = `ĐANG TẢI: ${pct}%`;
                 }
-            } catch (e) {
-                alert("Lỗi kết nối Server!");
-                btn.disabled = false;
-            }
-        };
+            };
+
+            xhr.onload = async () => {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    const driveResp = JSON.parse(xhr.responseText);
+                    const fileLink = `https://drive.google.com/file/d/${driveResp.id}/view`;
+
+                    // Bước 3: Cập nhật Link file vào lại Sheet
+                    btn.innerText = "ĐANG LƯU DỮ LIỆU...";
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'updateLink', rowIndex: config.rowIndex, fileLink: fileLink })
+                    });
+
+                    alert("CHÚC MỪNG! BÁO CÁO VÀ FILE ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
+                    location.reload();
+                } else {
+                    throw new Error("Lỗi Google Drive: " + xhr.status);
+                }
+            };
+            xhr.send(file);
+
+        } catch (err) { 
+            alert("Lỗi: " + err.message); 
+            btn.disabled = false; 
+            btn.innerText = "GỬI BÁO CÁO";
+        }
     }
 </script>
 </body>
