@@ -170,15 +170,26 @@ async function handleUpload(){
       }
     };
 
-    xhr.onload = ()=>{
-      if(xhr.status===200){
-        alert("Báo cáo đã gửi thành công.");
-        location.reload();
-      }else{
-        alert("Upload lỗi. File đã tạo nhưng chưa có nội dung.");
-        btn.disabled=false;
-      }
-    };
+xhr.onload = ()=>{
+
+  // Google Drive có thể trả 200 hoặc 204 khi upload thành công
+  if(xhr.status === 200 || xhr.status === 204){
+
+    alert("Báo cáo đã gửi thành công.");
+    location.reload();
+
+  } else {
+
+    alert("Upload lỗi. Status: " + xhr.status);
+    btn.disabled = false;
+  }
+};
+
+// Bắt lỗi mạng
+xhr.onerror = ()=>{
+  alert("Lỗi mạng khi upload.");
+  btn.disabled = false;
+};
 
     xhr.send(file);
 
