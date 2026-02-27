@@ -30,7 +30,7 @@
     <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
     <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
-    <div class="form-group"><label>6. Đính kèm (Video/Tài liệu):</label><input type="file" id="fileInput"></div>
+    <div class="form-group"><label>6. Đính kèm (Video/Tài liệu không quá 1,5GB):</label><input type="file" id="fileInput"></div>
     
     <div id="progressContainer"><div id="progressBar"></div></div>
     
@@ -39,28 +39,24 @@
 </div>
 
 <script>
-    // CHÚ Ý: Thay link Web App mới nhất của bạn vào đây
-    const API_URL = "https://script.google.com/macros/s/AKfycbzTFg4HhaNJhTmMKlnYwap_l8FNJmT-kOx2Upvs2ZvFzyYgDq5r8ePtUZFQhwIQ0xt7ZA/exec";
+    // Dán link Web App mới nhất của Ngọc vào đây
+    const API_URL = "https://script.google.com/macros/s/AKfycbzfY2Pj8NTai54wh4JW9mLFeZVL5TdrWdb4Bu0yIYvOEDxbZipzNXG9kI-OUYOK_cBSFw/exec";
     
-    let allData = []; // Lưu trữ toàn bộ danh mục nhân sự
+    let allData = [];
     let ss1, ss2, ss3;
 
     window.onload = async () => {
-        // Khởi tạo các thanh chọn thông minh
         ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => updatePBC2(v[0].value) } });
         ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
         ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm nhân sự...' } });
 
-        // Tải danh mục một lần duy nhất để tránh lỗi CORS và trắng thanh cuộn
         try {
             const res = await fetch(`${API_URL}?action=getDanhMuc`);
             allData = await res.json();
-            
             const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
             ss1.setData([{text: '-- Chọn Kênh --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
         } catch (e) {
-            console.error(e);
-            alert("Không tải được danh sách nhân sự. Hãy kiểm tra quyền 'Anyone' của Web App!");
+            alert("Lỗi tải danh mục. Hãy kiểm tra quyền 'Anyone' của Web App!");
         }
     };
 
@@ -78,100 +74,64 @@
         ss3.setData([{text: '-- Chọn Nhân sự --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
     }
 
-   async function handleUpload() {
+    async function handleUpload() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        const btn = document.getElementById('btnSubmit');
+        const bar = document.getElementById('progressBar');
+        
+        const nhanSu = document.getElementById('nhanSu').value;
+        if(!file || !nhanSu) return alert("Vui lòng chọn đủ thông tin và file!");
 
-  const file = document.getElementById('fileInput').files[0];
-  const btn = document.getElementById('btnSubmit');
-  const bar = document.getElementById('progressBar');
+        btn.disabled = true;
+        btn.innerText = "ĐANG KHỞI TẠO...";
+        document.getElementById('progressContainer').style.display = 'block';
 
-  if (!file || !document.getElementById('nhanSu').value) {
-    alert("Thiếu thông tin!");
-    return;
-  }
+        try {
+            // Bước 1: Gọi Apps Script để ghi dữ liệu vào Sheet ngay lập tức
+            const initRes = await fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    action: 'initiateUpload',
+                    fileName: file.name,
+                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    pbc1: document.getElementById('pbc1').value,
+                    pbc2: document.getElementById('pbc2').value,
+                    nhanSu: nhanSu,
+                    ngayChiaSe: document.getElementById('ngay').value,
+                    noiDungChinh: document.getElementById('noiDung').value
+                }) 
+            });
+            const config = await initRes.json();
+            if(!config.uploadUrl) throw new Error(config.error || "Không khởi tạo được luồng tải");
 
-  btn.disabled = true;
-  btn.innerText = "ĐANG KHỞI TẠO...";
-  document.getElementById('progressContainer').style.display = 'block';
+            // Bước 2: Tải dữ liệu thật lên Drive (Cân file 1GB)
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", config.uploadUrl, true);
+            
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    bar.style.width = pct + '%';
+                    btn.innerText = `ĐANG TẢI: ${pct}%`;
+                }
+            };
 
-  try {
+            xhr.onload = () => {
+                // Khi chạm mốc 100%, báo thành công luôn vì dữ liệu đã ghi ở bước 1 rồi
+                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
+                location.reload();
+            };
 
-    // 1️⃣ Tạo upload session
-    const initRes = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'initiateUpload',
-        fileName: file.name,
-        fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
-        fileSizeRaw: file.size,
-        pbc1: document.getElementById('pbc1').value,
-        pbc2: document.getElementById('pbc2').value,
-        nhanSu: document.getElementById('nhanSu').value,
-        ngayChiaSe: document.getElementById('ngay').value,
-        noiDungChinh: document.getElementById('noiDung').value
-      })
-    });
+            xhr.onerror = () => { alert("Lỗi kết nối mạng khi tải file!"); btn.disabled = false; };
+            xhr.send(file);
 
-    const config = await initRes.json();
-    if (config.error) throw new Error(config.error);
-
-    const uploadUrl = config.uploadUrl;
-
-    // 2️⃣ Upload file bằng PUT
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadUrl, true);
-    xhr.setRequestHeader("Content-Type", "application/octet-stream");
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 100);
-        bar.style.width = pct + '%';
-        btn.innerText = `ĐANG TẢI: ${pct}%`;
-      }
-    };
-
-    xhr.onload = async () => {
-
-      if (xhr.status >= 200 && xhr.status < 300) {
-
-        // 3️⃣ Xác nhận ghi Sheet
-        await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'confirmUpload',
-            pbc1: document.getElementById('pbc1').value,
-            pbc2: document.getElementById('pbc2').value,
-            nhanSu: document.getElementById('nhanSu').value,
-            ngayChiaSe: document.getElementById('ngay').value,
-            noiDungChinh: document.getElementById('noiDung').value,
-            finalName: config.finalName,
-            fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB"
-          })
-        });
-
-        alert("CHÚC MỪNG! FILE ĐÃ LÊN DRIVE & GHI SHEET THÀNH CÔNG.");
-        location.reload();
-
-      } else {
-        alert("Upload thất bại. Status: " + xhr.status);
-        btn.disabled = false;
-        btn.innerText = "GỬI BÁO CÁO";
-      }
-    };
-
-    xhr.onerror = () => {
-      alert("Lỗi mạng khi upload");
-      btn.disabled = false;
-      btn.innerText = "GỬI BÁO CÁO";
-    };
-
-    xhr.send(file);
-
-  } catch (err) {
-    alert("Lỗi hệ thống: " + err.message);
-    btn.disabled = false;
-    btn.innerText = "GỬI BÁO CÁO";
-  }
-}
+        } catch (err) { 
+            alert("Lỗi hệ thống: " + err.message); 
+            btn.disabled = false; 
+            btn.innerText = "GỬI BÁO CÁO";
+        }
+    }
 </script>
 </body>
 </html>
