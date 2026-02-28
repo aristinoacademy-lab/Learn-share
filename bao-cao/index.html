@@ -40,6 +40,8 @@
     <div id="progressContainer"><div id="progressBar"></div></div>
     
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
+        <a href="../" class="back-home">⬅ Quay lại trang chủ</a>
+</div>
     <div class="footer-text">Hệ thống thông tin Learn & Share</div>
 </div>
 
@@ -137,7 +139,15 @@ if(!file || !nhanSu || !noiDung) return alert("Vui lòng điền đầy đủ: N
         };
 
         xhr.send(file);
-            
+        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+        .then(() => { 
+            // Sau khi bấm OK ở alert, sẽ chuyển về trang chủ Hub
+            if(confirm("Gửi đăng ký thành công! Nhấn OK để quay về trang chủ.")) {
+                window.location.href = "../index.html"; 
+            } else {
+                window.location.href = "../index.html"; 
+            }
+        }) 
         } catch (err) { 
             alert("Lỗi hệ thống: " + err.message); 
             btn.disabled = false; 
