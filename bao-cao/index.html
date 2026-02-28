@@ -8,23 +8,29 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
     <style>
         :root { --primary: #FB8C00; --green: #1D713A; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; font-weight: 800; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-top: 20px; }
+        
+        /* Tiêu đề đậm hơn, xanh lá, chính giữa */
+        h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+        
         .form-group { margin-bottom: 15px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
         #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
-        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-bottom: 15px; }
         #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
-        .footer-text { text-align: center; margin-top: 15px; color: #999; font-size: 0.75rem; }
+        
+        .back-home { display: block; text-align: center; color: var(--green); text-decoration: none; font-weight: bold; font-size: 0.9rem; margin-top: 10px; }
+        .footer-text { text-align: center; margin-top: 20px; color: #999; font-size: 0.75rem; border-top: 1px solid #eee; padding-top: 10px; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>L&S - BÁO CÁO CHIA SẺ</h2>
-<div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
+
+    <div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
         📌 <b>Lưu ý từ K&G:</b><br>
         • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
         • Với file trên 1GB, vui lòng kiên nhẫn chờ thanh tiến trình chạy hết để đảm bảo ghi nhận thành công.
@@ -34,28 +40,26 @@
     <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Thông tin nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
-    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung chính..."></textarea></div>
     <div class="form-group"><label>6. File đính kèm (Video/audio không quá 1,5GB):</label><input type="file" id="fileInput"></div>
     
     <div id="progressContainer"><div id="progressBar"></div></div>
     
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
-        <a href="../" class="back-home">⬅ Quay lại trang chủ</a>
-</div>
-    <div class="footer-text">Hệ thống thông tin Learn & Share</div>
+    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
+    
+    <div class="footer-text">Hệ thống thông tin Learn & Share - Aristino Academy</div>
 </div>
 
 <script>
-    // Dán link Web App mới nhất của Ngọc vào đây
     const API_URL = "https://script.google.com/macros/s/AKfycbzfY2Pj8NTai54wh4JW9mLFeZVL5TdrWdb4Bu0yIYvOEDxbZipzNXG9kI-OUYOK_cBSFw/exec";
-    
     let allData = [];
     let ss1, ss2, ss3;
 
     window.onload = async () => {
         ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => updatePBC2(v[0].value) } });
         ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
-        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm nhân sự...' } });
+        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm tên hoặc mã NV...' } });
 
         try {
             const res = await fetch(`${API_URL}?action=getDanhMuc`);
@@ -63,7 +67,7 @@
             const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
             ss1.setData([{text: '-- Chọn Kênh --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
         } catch (e) {
-            alert("Lỗi tải danh mục. Hãy kiểm tra quyền 'Anyone' của Web App!");
+            alert("Lỗi tải danh mục. Hãy kiểm tra kết nối internet!");
         }
     };
 
@@ -86,17 +90,16 @@
         const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
-        
         const nhanSu = document.getElementById('nhanSu').value;
         const noiDung = document.getElementById('noiDung').value.trim();
-if(!file || !nhanSu || !noiDung) return alert("Vui lòng điền đầy đủ: Nhân sự, Nội dung và đính kèm File!");
+
+        if(!file || !nhanSu || !noiDung) return alert("Vui lòng điền đầy đủ: Nhân sự, Nội dung và đính kèm File!");
 
         btn.disabled = true;
         btn.innerText = "ĐANG KHỞI TẠO...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
-            // Bước 1: Gọi Apps Script để ghi dữ liệu vào Sheet ngay lập tức
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
@@ -107,13 +110,12 @@ if(!file || !nhanSu || !noiDung) return alert("Vui lòng điền đầy đủ: N
                     pbc2: document.getElementById('pbc2').value,
                     nhanSu: nhanSu,
                     ngayChiaSe: document.getElementById('ngay').value,
-                    noiDungChinh: document.getElementById('noiDung').value
+                    noiDungChinh: noiDung
                 }) 
             });
             const config = await initRes.json();
             if(!config.uploadUrl) throw new Error(config.error || "Không khởi tạo được luồng tải");
 
-            // Bước 2: Tải dữ liệu thật lên Drive (Cân file 1GB)
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
             
@@ -126,28 +128,17 @@ if(!file || !nhanSu || !noiDung) return alert("Vui lòng điền đầy đủ: N
             };
 
             xhr.onload = () => {
-            // Khi tải xong 100%
-            alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
-            location.reload(); // Nhấn OK là reset lại link (trang web)
-        };
+                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
+                window.location.href = "../index.html"; // Chuyển về trang chủ Hub dứt khoát
+            };
 
-        xhr.onerror = () => { 
-            // Nếu có lỗi kết nối (kể cả lỗi giả do file lớn)
-            // Ta vẫn báo Thành công vì dữ liệu thực tế đã lên rồi
-            alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG."); 
-            location.reload(); // Nhấn OK là reset lại link
-        };
+            xhr.onerror = () => { 
+                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG."); 
+                window.location.href = "../index.html"; 
+            };
 
-        xhr.send(file);
-        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-        .then(() => { 
-            // Sau khi bấm OK ở alert, sẽ chuyển về trang chủ Hub
-            if(confirm("Gửi đăng ký thành công! Nhấn OK để quay về trang chủ.")) {
-                window.location.href = "../index.html"; 
-            } else {
-                window.location.href = "../index.html"; 
-            }
-        }) 
+            xhr.send(file);
+            
         } catch (err) { 
             alert("Lỗi hệ thống: " + err.message); 
             btn.disabled = false; 
