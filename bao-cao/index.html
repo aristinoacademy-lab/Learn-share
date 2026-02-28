@@ -24,6 +24,11 @@
 <body>
 <div class="container">
     <h2>L&S - BÁO CÁO CHIA SẺ</h2>
+<div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
+        📌 <b>Lưu ý từ K&G:</b><br>
+        • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
+        • Với file trên 1GB, vui lòng kiên nhẫn chờ thanh tiến trình chạy hết để đảm bảo ghi nhận thành công.
+    </div>
     
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
@@ -35,7 +40,7 @@
     <div id="progressContainer"><div id="progressBar"></div></div>
     
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
-    <div class="footer-text">Lời nhắn từ K&G: Dữ liệu có thể nhiều, file có thể nặng bạn kiên nhẫn chờ đợi loading dữ liệu cũng như tải file đính kèm nhé. Ghi nhận bạn!</div>
+    <div class="footer-text">Hệ thống thông tin Learn & Share</div>
 </div>
 
 <script>
@@ -81,7 +86,8 @@
         const bar = document.getElementById('progressBar');
         
         const nhanSu = document.getElementById('nhanSu').value;
-        if(!file || !nhanSu) return alert("Vui lòng chọn đủ thông tin và file!");
+        const noiDung = document.getElementById('noiDung').value.trim();
+if(!file || !nhanSu || !noiDung) return alert("Vui lòng điền đầy đủ: Nhân sự, Nội dung và đính kèm File!");
 
         btn.disabled = true;
         btn.innerText = "ĐANG KHỞI TẠO...";
