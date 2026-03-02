@@ -91,9 +91,10 @@
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
         const nhanSu = document.getElementById('nhanSu').value;
+        const ngayChiaSe = document.getElementById('ngayChiaSe').value;
         const noiDung = document.getElementById('noiDung').value.trim();
 
-        if(!file || !nhanSu || !noiDung) return alert("Vui lòng điền đầy đủ: Nhân sự, Nội dung và đính kèm File!");
+        if(!file || !nhanSu || !ngayChiaSe || !noiDung) return alert("Vui lòng điền đầy đủ: Nhân sự, Nội dung, Ngày chia sẻ và đính kèm File!");
 
         btn.disabled = true;
         btn.innerText = "ĐANG KHỞI TẠO...";
