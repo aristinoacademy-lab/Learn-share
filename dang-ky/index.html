@@ -99,28 +99,37 @@
             pbc2: document.getElementById('pbc2').value,
             dinhHuong: document.getElementById('dinhHuong').value,
             noiDungChiTiet: document.getElementById('noiDung').value,
-            hoTro: document.getElementById('hoTro').value
         };
 
         if(!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) {
             return alert("Vui lòng điền đủ mục 1, 2 và 4!");
         }
 
+        const payload = {
+            pbc1: pbc1,
+            pbc2: pbc2,
+            dinhHuong: dinhHuong,
+            noiDungChiTiet: noiDungChiTiet
+        };
+
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
         btn.innerText = "ĐANG GỬI...";
 
-        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+        // Sử dụng mode 'no-cors' để tránh lỗi bảo mật khi gửi sang Apps Script
+        fetch(API_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(payload) 
+        })
         .then(() => { 
-            // Sau khi bấm OK ở alert, sẽ chuyển về trang chủ Hub
-            if(confirm("Gửi đăng ký thành công! Nhấn OK để quay về trang chủ.")) {
-                window.location.href = "../index.html"; 
-            } else {
-                window.location.href = "../index.html"; 
-            }
+            alert("🎉 Chúc mừng! Đăng ký Learn & Share thành công.");
+            // Chuyển hướng dứt khoát về trang chủ
+            window.location.href = "../index.html"; 
         })
         .catch(err => {
-            alert("Lỗi mạng, hãy thử lại.");
+            console.error(err);
+            alert("❌ Lỗi mạng hoặc máy chủ bận, hãy thử lại sau ít phút.");
             btn.disabled = false;
             btn.innerText = "GỬI ĐĂNG KÝ";
         });
