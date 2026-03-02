@@ -3,50 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký Learn & Share</title>
+    <title>Đăng ký Learn & Share | Aristino</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
     <style>
         :root { --primary: #1D713A; --accent: #FB8C00; }
-        body { font-family: 'Segoe UI', Arial; background: var(--primary); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--primary); margin: 0; padding: 15px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); margin-top: 20px; }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; font-weight: 800; }
         .form-group { margin-bottom: 15px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; color: #333; }
         input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
         input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(29, 113, 58, 0.2); }
-        input[readonly] { background-color: #f9f9f9; color: #555; }
-        #btnSubmit { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; transition: 0.3s; }
+        input[readonly] { background-color: #f9f9f9; color: #666; font-style: italic; }
+        #btnSubmit { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; transition: 0.3s; text-transform: uppercase; }
         #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
-        .back-home { display:block; text-align:center; margin-top:15px; color:var(--primary); text-decoration:none; font-weight: 500; }
-        .ss-content .ss-list { max-height: 200px !important; overflow-y: auto !important; }
+        .back-home { display: block; text-align: center; margin-top: 15px; color: var(--primary); text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+        .ss-content .ss-list { max-height: 200px !important; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>ĐĂNG KÝ LEARN & SHARE</h2>
+    
     <div class="form-group">
         <label>1. Chọn Kênh/Khối (PBC1) (*):</label>
         <select id="pbc1"></select>
     </div>
+    
     <div class="form-group">
-        <label>2. Chọn Khu vực/Phòng Ban (PBC2) (*):</label>
+        <label>2. Chọn Khu vực/Phòng Ban/Quản lý (PBC2) (*):</label>
         <select id="pbc2"></select>
     </div>
+    
     <div class="form-group">
         <label>3. Nội dung định hướng (Dựa trên TNA):</label>
-        <input type="text" id="dinhHuong" readonly placeholder="Tự động hiển thị...">
+        <input type="text" id="dinhHuong" readonly placeholder="Tự động hiển thị khi chọn Mục 2...">
     </div>
+    
     <div class="form-group">
-        <label>4. Nội dung chia sẻ đơn vị đăng ký tháng này (*):</label>
-        <textarea id="noiDung" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ gì?"></textarea>
+        <label>4. Nội dung chia sẻ dự kiến tháng này (*):</label>
+        <textarea id="noiDung" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ nội dung gì?"></textarea>
     </div>
+    
     <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
-    <a href="../" class="back-home">⬅ Quay lại trang chủ</a>
+    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ</a>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxr642o2xRGnnIDGKt_I9fLXYYLzldRxZZ5tNjRCgbNi52uw07GnFXQ4CdGm6guYnOW3g/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzcMLAjFImdTRTPBBO1j1ZRVSu2z0TBBW0PFYb-kDnaLajc1HzDY91slttTxqIoxyVpJg/exec";
     let ss1, ss2;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -57,7 +62,7 @@
         });
         ss2 = new SlimSelect({
             select: '#pbc2',
-            settings: { placeholderText: 'Tìm Khu vực/PB/Quản lý tương ứng...', showSearch: true },
+            settings: { placeholderText: 'Tìm Khu vực/PB/Quản lý...', showSearch: true },
             events: { afterChange: (v) => { if(v[0].value) loadDinhHuong(v[0].value); } }
         });
         fetchData('getPBC1');
@@ -78,58 +83,57 @@
                 document.getElementById('dinhHuong').value = data;
             }
         } catch (error) {
-            console.error("Lỗi:", error);
+            console.error("Lỗi tải dữ liệu:", error);
         }
     }
 
     function loadPBC2(v) { 
         document.getElementById('dinhHuong').value = ""; 
-        ss2.setData([{text: 'Đang tải...', value: ''}]);
+        ss2.setData([{text: 'Đang tải danh sách...', value: ''}]);
         fetchData('getPBC2', `&pbc1=${encodeURIComponent(v)}`); 
     }
 
     function loadDinhHuong(v) { 
-        document.getElementById('dinhHuong').value = "Đang lấy dữ liệu...";
+        document.getElementById('dinhHuong').value = "Đang lấy định hướng...";
         fetchData('getDinhHuong', `&pbc2=${encodeURIComponent(v)}`); 
     }
 
     function submitData() {
-        const payload = {
-            pbc1: document.getElementById('pbc1').value,
-            pbc2: document.getElementById('pbc2').value,
-            dinhHuong: document.getElementById('dinhHuong').value,
-            noiDungChiTiet: document.getElementById('noiDung').value,
-        };
+        // Lấy giá trị từ các ô nhập liệu
+        const pbc1 = document.getElementById('pbc1').value;
+        const pbc2 = document.getElementById('pbc2').value;
+        const dinhHuong = document.getElementById('dinhHuong').value;
+        const noiDungValue = document.getElementById('noiDung').value.trim();
 
-        if(!payload.pbc1 || !payload.pbc2 || !payload.noiDungChiTiet) {
-            return alert("Vui lòng điền đủ mục 1, 2 và 4!");
+        // Kiểm tra bắt buộc điền các mục 1, 2 và 4
+        if(!pbc1 || !pbc2 || !noiDungValue) {
+            return alert("⚠️ Vui lòng hoàn thành: Chọn Kênh, Phòng ban và Điền nội dung chia sẻ!");
         }
-
-        const payload = {
-            pbc1: pbc1,
-            pbc2: pbc2,
-            dinhHuong: dinhHuong,
-            noiDungChiTiet: noiDungChiTiet
-        };
 
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
         btn.innerText = "ĐANG GỬI...";
 
-        // Sử dụng mode 'no-cors' để tránh lỗi bảo mật khi gửi sang Apps Script
+        const payload = {
+            pbc1: pbc1,
+            pbc2: pbc2,
+            dinhHuong: dinhHuong,
+            noiDung: noiDungValue
+        };
+
+        // Gửi dữ liệu sang Google Apps Script
         fetch(API_URL, { 
             method: 'POST', 
             mode: 'no-cors', 
             body: JSON.stringify(payload) 
         })
         .then(() => { 
-            alert("🎉 Chúc mừng! Đăng ký Learn & Share thành công.");
-            // Chuyển hướng dứt khoát về trang chủ
+            alert("🎉 Chúc mừng! Đăng ký Nội dung Learn & Share tháng thành công.");
             window.location.href = "../index.html"; 
         })
         .catch(err => {
             console.error(err);
-            alert("❌ Lỗi mạng hoặc máy chủ bận, hãy thử lại sau ít phút.");
+            alert("❌ Lỗi kết nối, vui lòng thử lại sau ít phút.");
             btn.disabled = false;
             btn.innerText = "GỬI ĐĂNG KÝ";
         });
