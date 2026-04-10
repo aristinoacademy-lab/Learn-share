@@ -20,44 +20,49 @@
         #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
         .back-home { display: block; text-align: center; margin-top: 15px; color: var(--primary); text-decoration: none; font-weight: bold; font-size: 0.9rem; }
         .ss-content .ss-list { max-height: 200px !important; }
+        
+        /* Style cho thông báo đóng form */
+        .closed-message { text-align: center; padding: 20px; }
+        .closed-message h3 { color: #d9534f; text-transform: uppercase; }
+        .closed-message p { line-height: 1.6; color: #555; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="container" id="mainContainer">
     <h2>ĐĂNG KÝ LEARN & SHARE</h2>
     
-    <div class="form-group">
-        <label>1. Chọn Kênh/Khối (PBC1) (*):</label>
-        <select id="pbc1"></select>
+    <div id="formContent">
+        <div class="form-group">
+            <label>1. Chọn Kênh/Khối (PBC1) (*):</label>
+            <select id="pbc1"></select>
+        </div>
+        
+        <div class="form-group">
+            <label>2. Chọn Khu vực/Phòng Ban/Quản lý (PBC2) (*):</label>
+            <select id="pbc2"></select>
+        </div>
+        
+        <div class="form-group">
+            <label>3. Nội dung định hướng (Tự động hiển thị khi chọn Mục 2):</label>
+            <textarea id="dinhHuong" rows="5" readonly 
+                placeholder="Tự động hiển thị khi chọn Mục 2..." 
+                style="background-color: #f0f4f1; color: #333; resize: none; border-left: 5px solid var(--primary);">
+            </textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>4. Nội dung chia sẻ dự kiến tháng này (*):</label>
+            <textarea id="noiDung" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ nội dung gì?"></textarea>
+        </div>
+        
+        <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
     </div>
     
-    <div class="form-group">
-        <label>2. Chọn Khu vực/Phòng Ban/Quản lý (PBC2) (*):</label>
-        <select id="pbc2"></select>
-    </div>
-    
-<div class="form-group">
-    <label>3. Nội dung định hướng (Tự động hiển thị khi chọn Mục 2):</label>
-    <textarea id="dinhHuong" rows="5" readonly 
-        placeholder="Tự động hiển thị khi chọn Mục 2..." 
-        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; 
-               box-sizing: border-box; font-size: 15px; background-color: #f0f4f1; 
-               color: #333; font-style: normal; line-height: 1.6; 
-               white-space: pre-wrap; overflow-wrap: break-word; 
-               resize: none; border-left: 5px solid var(--primary);">
-    </textarea>
-</div>
-    
-    <div class="form-group">
-        <label>4. Nội dung chia sẻ dự kiến tháng này (*):</label>
-        <textarea id="noiDung" rows="3" placeholder="Đơn vị bạn dự kiến chia sẻ nội dung gì?"></textarea>
-    </div>
-    
-    <button id="btnSubmit" onclick="submitData()">GỬI ĐĂNG KÝ</button>
     <a href="../index.html" class="back-home">⬅ Quay lại trang chủ</a>
 </div>
 
 <script>
+    // Cập nhật API_URL mới nhất của bạn sau khi Deploy
     const API_URL = "https://script.google.com/macros/s/AKfycbzJSAuwWm95ivMYAyH7K0leycfGaL2edtyeAFXzqKm3maUnRwGHxHviKCPdjoMQCSxa1Q/exec";
     let ss1, ss2;
 
@@ -80,6 +85,12 @@
             const res = await fetch(`${API_URL}?action=${action}${params}&v=${Date.now()}`);
             const data = await res.json();
             
+            // KIỂM TRA TRẠNG THÁI FORM TỪ BACKEND
+            if(data.error === "CLOSED") {
+                displayClosedMessage(data.message);
+                return;
+            }
+
             if(action === 'getPBC1') {
                 ss1.setData([{text: '-- Chọn Kênh/Khối --', value: ''}, ...data.map(i => ({text: i, value: i}))]);
             } 
@@ -94,6 +105,16 @@
         }
     }
 
+    function displayClosedMessage(msg) {
+        document.getElementById('formContent').innerHTML = `
+            <div class="closed-message">
+                <h3>Thông báo đóng cổng</h3>
+                <p>${msg}</p>
+                <button onclick="window.location.reload()" style="background:var(--primary); color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer;">Tải lại trang</button>
+            </div>
+        `;
+    }
+
     function loadPBC2(v) { 
         document.getElementById('dinhHuong').value = ""; 
         ss2.setData([{text: 'Đang tải danh sách...', value: ''}]);
@@ -106,13 +127,11 @@
     }
 
     function submitData() {
-        // Lấy giá trị từ các ô nhập liệu
         const pbc1 = document.getElementById('pbc1').value;
         const pbc2 = document.getElementById('pbc2').value;
         const dinhHuong = document.getElementById('dinhHuong').value;
         const noiDungValue = document.getElementById('noiDung').value.trim();
 
-        // Kiểm tra bắt buộc điền các mục 1, 2 và 4
         if(!pbc1 || !pbc2 || !noiDungValue) {
             return alert("⚠️ Vui lòng hoàn thành: Chọn Kênh, Phòng ban và Điền nội dung chia sẻ!");
         }
@@ -121,22 +140,21 @@
         btn.disabled = true;
         btn.innerText = "ĐANG GỬI...";
 
-        const payload = {
-            pbc1: pbc1,
-            pbc2: pbc2,
-            dinhHuong: dinhHuong,
-            noiDung: noiDungValue
-        };
+        const payload = { pbc1, pbc2, dinhHuong, noiDung: noiDungValue };
 
-        // Gửi dữ liệu sang Google Apps Script
         fetch(API_URL, { 
             method: 'POST', 
-            mode: 'no-cors', 
             body: JSON.stringify(payload) 
         })
-        .then(() => { 
-            alert("🎉 Chúc mừng! Đăng ký Nội dung Learn & Share tháng thành công.");
-            window.location.href = "../index.html"; 
+        .then(res => res.text())
+        .then(text => {
+            if(text === "CLOSED_ERROR") {
+                alert("⚠️ Đã hết thời gian đăng ký nội dung chia sẻ tháng này, anh chị vui lòng quay lại vào tháng sau nhé!");
+                window.location.reload();
+            } else {
+                alert("🎉 Chúc mừng! Đăng ký Nội dung Learn & Share tháng thành công.");
+                window.location.href = "../index.html"; 
+            }
         })
         .catch(err => {
             console.error(err);
