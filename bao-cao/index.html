@@ -89,7 +89,7 @@
         if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
         const pbc1Val = document.getElementById('pbc1').value;
         const list3 = [...new Set(allData.filter(r => r[0] === pbc1Val && r[1] === val).map(r => r[2]))].filter(String).sort();
-        ss3.setData([{text: '-- Chọn Nhân sự --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+        ss3.setData([{text: '-- Chọn NS ghi nhận KPI chia sẻ --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
     }
 
     async function handleUpload() {
