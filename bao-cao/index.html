@@ -35,7 +35,7 @@
     
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
-    <div class="form-group"><label>3. Thông tin nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
+    <div class="form-group"><label>3. Thông tin nhân sự THỰC HIỆN chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
     <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung chính..."></textarea></div>
     <div class="form-group"><label>6. File đính kèm (Video/audio không quá 1,5GB):</label><input type="file" id="fileInput"></div>
@@ -89,7 +89,7 @@
         if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
         const pbc1Val = document.getElementById('pbc1').value;
         const list3 = [...new Set(allData.filter(r => r[0] === pbc1Val && r[1] === val).map(r => r[2]))].filter(String).sort();
-        ss3.setData([{text: '-- Chọn NS ghi nhận KPI chia sẻ --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+        ss3.setData([{text: '-- Chọn đúng tên mình để được ghi nhận --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
     }
 
     async function handleUpload() {
