@@ -149,7 +149,7 @@
         .then(res => res.text())
         .then(text => {
             if(text === "CLOSED_ERROR") {
-                alert("⚠️ Đã hết thời gian đăng ký nội dung chia sẻ tháng này, anh chị vui lòng quay lại vào tháng sau nhé!");
+                alert("⚠️ Đã hết thời gian đăng ký nội dung chia sẻ tháng này, xem kết quả tại https://datastudio.google.com/reporting/a516cad0-cdf3-4f7a-a484-19b9075678f1. Anh chị vui lòng quay lại vào tháng sau nhé!");
                 window.location.reload();
             } else {
                 alert("🎉 Chúc mừng! Đăng ký Nội dung Learn & Share tháng thành công.");
