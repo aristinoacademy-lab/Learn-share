@@ -6,6 +6,7 @@
     <title>L&S Báo Cáo | Aristino Academy</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <style>
         :root { --primary: #FB8C00; --green: #1D713A; }
         body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
@@ -55,28 +56,25 @@
     
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
     <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
-    
     <div class="footer-text">Hệ thống thông tin Learn & Share - Aristino Academy</div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbx1IuD2A4_E2cbjtzdbqWm8HZ5hH7TwvyzM0p0qf9LWzEdHbA6L7V8HmXDmwuXEH33F1w/exec";
+    // DÁN LINK EXEC CỦA BẠN VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbzlJOvoEDY_BUs713A8q13bv10kUQU3OQ8Xdeb0jfpIFGiMd9uZCQ8yoZRClIGfzQ6BCA/exec";
     let allData = [];
     let ss1, ss2, ss3;
 
     window.onload = async () => {
-        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => updatePBC2(v[0].value) } });
-        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
-        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm tên hoặc mã NV...' } });
-
+        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn' }, events: { afterChange: v => updatePBC2(v[0].value) } });
+        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
+        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm nhân viên...' } });
         try {
             const res = await fetch(`${API_URL}?action=getDanhMuc`);
             allData = await res.json();
             const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
             ss1.setData([{text: '-- Chọn Kênh --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
-        } catch (e) {
-            console.log("Lỗi tải danh mục");
-        }
+        } catch (e) { console.error("Lỗi danh mục"); }
     };
 
     function updatePBC2(val) {
@@ -87,9 +85,25 @@
 
     function updateNhanSu(val) {
         if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
-        const pbc1Val = document.getElementById('pbc1').value;
-        const list3 = [...new Set(allData.filter(r => r[0] === pbc1Val && r[1] === val).map(r => r[2]))].filter(String).sort();
-        ss3.setData([{text: '-- Chọn đúng tên mình để được ghi nhận --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+        const p1 = document.getElementById('pbc1').value;
+        const list3 = [...new Set(allData.filter(r => r[0] === p1 && r[1] === val).map(r => r[2]))].filter(String).sort();
+        ss3.setData([{text: '-- Chọn đúng tên mình --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+    }
+
+    // PARTIAL MD5: Băm 3MB để xử lý file GB trong 0.5 giây
+    async function calculatePartialMD5(file) {
+        const spark = new SparkMD5.ArrayBuffer();
+        const size = file.size;
+        const chunkSize = 1024 * 1024;
+        const read = (s) => new Promise(res => {
+            const r = new FileReader();
+            r.onload = (e) => res(e.target.result);
+            r.readAsArrayBuffer(file.slice(s, s + chunkSize));
+        });
+        spark.append(await read(0));
+        if (size > chunkSize * 2) spark.append(await read(Math.floor(size / 2)));
+        if (size > chunkSize) spark.append(await read(size - chunkSize));
+        return spark.end() + "_" + size;
     }
 
     async function handleUpload() {
@@ -97,37 +111,39 @@
         const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
-        const nhanSu = document.getElementById('nhanSu').value;
-        const ngay = document.getElementById('ngay').value;
-        const noiDung = document.getElementById('noiDung').value.trim();
-        const phanLoai = document.getElementById('phanLoai').value;
+        const f = {
+            nhanSu: document.getElementById('nhanSu').value,
+            ngay: document.getElementById('ngay').value,
+            noiDung: document.getElementById('noiDung').value.trim(),
+            phanLoai: document.getElementById('phanLoai').value,
+            pbc1: document.getElementById('pbc1').value,
+            pbc2: document.getElementById('pbc2').value
+        };
 
-        if(!file || !nhanSu || !ngay || !noiDung || !phanLoai) return alert("Vui lòng điền đầy đủ thông tin từ mục 1 đến mục 7!");
+        if(!file || !f.nhanSu || !f.ngay || !f.noiDung || !f.phanLoai) return alert("Vui lòng điền đủ thông tin!");
 
         btn.disabled = true;
-        btn.innerText = "ĐANG KHỞI TẠO...";
+        btn.innerText = "ĐANG QUÉT FILE...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
+            const pMd5 = await calculatePartialMD5(file);
+            btn.innerText = "ĐANG GHI LOG...";
+            
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
-                    action: 'initiateUpload',
-                    fileName: file.name,
-                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
-                    pbc1: document.getElementById('pbc1').value,
-                    pbc2: document.getElementById('pbc2').value,
-                    nhanSu: nhanSu,
-                    ngayChiaSe: ngay,
-                    noiDungChinh: noiDung,
-                    phanLoai: phanLoai
+                    fileName: file.name, fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    pbc1: f.pbc1, pbc2: f.pbc2, nhanSu: f.nhanSu, ngay: f.ngay, noiDung: f.noiDung, 
+                    phanLoai: f.phanLoai, partialMd5: pMd5
                 }) 
             });
             const config = await initRes.json();
-            
+
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
-            
+            xhr.setRequestHeader("Authorization", "Bearer " + config.accessToken);
+
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
                     const pct = Math.round((e.loaded / e.total) * 100);
@@ -136,21 +152,29 @@
                 }
             };
 
-            xhr.onload = () => {
+            const finalize = async (fId) => {
+                btn.innerText = "XÁC NHẬN...";
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fId }) });
                 alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
                 window.location.href = "../index.html";
             };
 
-            xhr.onerror = () => { 
-                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG."); 
-                window.location.href = "../index.html"; 
+            xhr.onload = () => {
+                let fId = "";
+                try { fId = JSON.parse(xhr.response).id; } catch(e) {}
+                if (xhr.status === 200 || xhr.status === 201 || xhr.status === 0) finalize(fId);
+                else { alert("Lỗi nộp file!"); btn.disabled = false; }
+            };
+
+            xhr.onerror = () => {
+                if (bar.style.width === '100%') finalize("");
+                else { alert("Lỗi mạng!"); btn.disabled = false; }
             };
 
             xhr.send(file);
-            
-        } catch (err) { 
-            alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG."); 
-            window.location.href = "../index.html";
+        } catch (err) {
+            alert("Lỗi: " + err.message);
+            btn.disabled = false;
         }
     }
 </script>
