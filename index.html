@@ -5,22 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learn & Share - Học viện Aristino</title>
     <style>
-        :root { --primary: #1D713A; --accent: #FB8C00; --info: #003366; }
+        :root { 
+            --primary: #1D713A; 
+            --accent: #FB8C00; 
+            --info: #003366; 
+            --survey: #D32F2F; /* Màu đỏ nổi bật cho khảo sát */
+        }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5; }
         .hub-container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
         h1 { color: var(--primary); margin-bottom: 25px; font-size: 20px; text-transform: uppercase; }
         .btn-group { display: flex; flex-direction: column; gap: 12px; }
         .btn { padding: 16px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 15px; color: white; transition: 0.3s; text-align: center; }
+        
         .btn-info { background-color: var(--info); }
         .btn-reg { background-color: var(--primary); }
         .btn-rpt { background-color: var(--accent); }
+        .btn-survey { background-color: var(--survey); animation: pulse 2s infinite; }
+        
         .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        
+        /* Hiệu ứng nhấp nháy nhẹ thu hút sự chú ý cho nút Khảo sát */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+        }
     </style>
 </head>
 <body>
     <div class="hub-container">
         <h1>THỰC HỌC - LEARN & SHARE</h1>
         <div class="btn-group">
+            <!-- Nút Khảo sát được đưa lên đầu và thêm hiệu ứng -->
+            <a href="https://ksls-five.vercel.app/" target="_blank" class="btn btn-survey">🌟 KHẢO SÁT ĐÁNH GIÁ 6 THÁNG</a>
+            
             <a href="https://ngoinhachung.vn/van-hoa-thuc-hoc" target="_blank" class="btn btn-info">ℹ️ THÔNG TIN CHƯƠNG TRÌNH</a>
             <a href="./dang-ky/" class="btn btn-reg">📝 ĐĂNG KÝ NỘI DUNG CHIA SẺ</a>
             <a href="./bao-cao/" class="btn btn-rpt">📊 GỬI BÁO CÁO GHI NHẬN CHIA SẺ</a>
